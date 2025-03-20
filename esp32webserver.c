@@ -612,6 +612,94 @@ void loop()
  }
 }
                                       
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// File > Examples > WiFi > WiFiScan.ino ///////////////////////////// 
+/*
+ *  This sketch demonstrates how to scan WiFi networks.
+ *  The API is based on the Arduino WiFi Shield library, but has significant changes as newer WiFi functions are supported.
+ *  E.g. the return value of `encryptionType()` different because more modern encryption is supported.
+ */
+#include "WiFi.h"
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // Set WiFi to station mode and disconnect from an AP if it was previously connected.
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+
+    Serial.println("Setup done");
+}
+
+void loop()
+{
+    Serial.println("Scan start");
+
+    // WiFi.scanNetworks will return the number of networks found.
+    int n = WiFi.scanNetworks();
+    Serial.println("Scan done");
+    if (n == 0) {
+        Serial.println("no networks found");
+    } else {
+        Serial.print(n);
+        Serial.println(" networks found");
+        Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
+        for (int i = 0; i < n; ++i) {
+            // Print SSID and RSSI for each network found
+            Serial.printf("%2d",i + 1);
+            Serial.print(" | ");
+            Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
+            Serial.print(" | ");
+            Serial.printf("%4d", WiFi.RSSI(i));
+            Serial.print(" | ");
+            Serial.printf("%2d", WiFi.channel(i));
+            Serial.print(" | ");
+            switch (WiFi.encryptionType(i))
+            {
+            case WIFI_AUTH_OPEN:
+                Serial.print("open");
+                break;
+            case WIFI_AUTH_WEP:
+                Serial.print("WEP");
+                break;
+            case WIFI_AUTH_WPA_PSK:
+                Serial.print("WPA");
+                break;
+            case WIFI_AUTH_WPA2_PSK:
+                Serial.print("WPA2");
+                break;
+            case WIFI_AUTH_WPA_WPA2_PSK:
+                Serial.print("WPA+WPA2");
+                break;
+            case WIFI_AUTH_WPA2_ENTERPRISE:
+                Serial.print("WPA2-EAP");
+                break;
+            case WIFI_AUTH_WPA3_PSK:
+                Serial.print("WPA3");
+                break;
+            case WIFI_AUTH_WPA2_WPA3_PSK:
+                Serial.print("WPA2+WPA3");
+                break;
+            case WIFI_AUTH_WAPI_PSK:
+                Serial.print("WAPI");
+                break;
+            default:
+                Serial.print("unknown");
+            }
+            Serial.println();
+            delay(10);
+        }
+    }
+    Serial.println("");
+
+    // Delete the scan result to free memory for code below.
+    WiFi.scanDelete();
+
+    // Wait a bit before scanning again.
+    delay(5000);
+}
 
 
 
@@ -649,8 +737,214 @@ void loop()
 {
   ;
 }
-    
-    
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////// wifi esp deep sleep /////////////////////////////////////////////////////
+// wifi esp deep sleep
+#include <WiFi.h>
+//Time in seconds
+#define CONNECTION_TIMEOUT 5
+#define DEEP_SLEEP_DURATION 10
+
+const char* ssid = "ELEC302";
+const char* password = "elec124";
+
+void setup()
+{
+    Serial.begin(115200);
+    WiFi.begin(ssid, password);
+    Serial.println("\nConnecting");
+    int timeout_counter = 0;
+
+    while(WiFi.status() != WL_CONNECTED)
+    {
+        Serial.print(".");
+        delay(100);
+        timeout_counter++;
+            if(timeout_counter >= CONNECTION_TIMEOUT*10)
+            {
+                Serial.println("\nCan't establish WiFi connection");
+                //Setup timer
+                esp_sleep_enable_timer_wakeup(DEEP_SLEEP_DURATION * 1000000);
+                //Start deep sleep
+                esp_deep_sleep_start();
+            }
+    }
+    Serial.println("\nConnected to the WiFi network");
+    Serial.print("Local ESP32 IP: ");
+    Serial.println(WiFi.localIP());
+}
+
+void loop(){}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////// auto reconnect //////////////////////////////////////////////////////////
+
+#include <WiFi.h>
+
+// Replace with your network credentials (STATION)
+const char* ssid = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
+
+void initWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi ..");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println(WiFi.localIP());
+}
+
+void setup() {
+  Serial.begin(115200);
+  initWiFi();
+  Serial.print("RSSI: ");
+  Serial.println(WiFi.RSSI());
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  // if WiFi is down, try reconnecting every CHECK_WIFI_TIME seconds
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// wifi event reconect /////////////////////////////////////////////////////
+#include <WiFi.h> 
+const char* ssid = "REPLACE_WITH_YOUR_SSID"; 
+const char* password = "REPLACE_WITH_YOUR_PASSWORD"; 
+void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{ 
+ Serial.println("Connected to AP successfully!"); 
+} 
+
+void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
+{ 
+ Serial.println("WiFi connected"); 
+ Serial.println("IP address: "); 
+ Serial.println(WiFi.localIP()); 
+} 
+
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{ 
+ Serial.println("Disconnected from WiFi access point"); 
+ Serial.print("WiFi lost connection. Reason: "); 
+ Serial.println(info.wifi_sta_disconnected.reason); 
+ Serial.println("Trying to Reconnect"); 
+ WiFi.begin(ssid, password); 
+} 
+
+void setup()
+{ 
+ Serial.begin(115200); // delete old config 
+ WiFi.disconnect(true); 
+ delay(1000); 
+ WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED); 
+ WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP); 
+ WiFi.onEvent(WiFiStationDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED); 
+
+/* //Remove WiFi event 
+ Serial.print("WiFi Event ID: "); 
+ Serial.println(eventID); 
+ WiFi.removeEvent(eventID);
+*/ 
+
+ WiFi.begin(ssid, password); 
+ Serial.println(); 
+ Serial.println(); 
+ Serial.println("Wait for WiFi... "); 
+} 
+
+void loop()
+{ 
+ delay(1000); 
+} 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////// wifiMulti auto reconnect ////////////////////////////////////////////////
+//wifiMulti auto reconnect
+#include <WiFi.h>
+#include <WiFiMulti.h>
+
+WiFiMulti wifiMulti;
+
+// WiFi connect timeout per AP. Increase when connecting takes longer.
+const uint32_t connectTimeoutMs = 10000;
+
+void setup()
+{
+  Serial.begin(115200);
+  delay(10);
+  WiFi.mode(WIFI_STA);
+  
+  // Add list of wifi networks
+  wifiMulti.addAP("ELEC302", "elec1234");
+  wifiMulti.addAP("ssid_from_AP_2", "your_password_for_AP_2");
+  wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
+
+  // WiFi.scanNetworks will return the number of networks found
+  int n = WiFi.scanNetworks();
+  Serial.println("scan done");
+  if (n == 0) 
+  {
+      Serial.println("no networks found");
+  } 
+  else 
+  {
+    Serial.print(n);
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) 
+    {
+      // Print SSID and RSSI for each network found
+      Serial.print(i + 1);
+      Serial.print(": ");
+      Serial.print(WiFi.SSID(i));
+      Serial.print(" (");
+      Serial.print(WiFi.RSSI(i));
+      Serial.print(")");
+      Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+      delay(10);
+    }
+  }
+
+  // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
+  Serial.println("Connecting Wifi...");
+  if(wifiMulti.run() == WL_CONNECTED) 
+  {
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
+}
+
+void loop()
+{
+  //if the connection to the stongest hotstop is lost, it will connect to the next network on the list
+  if (wifiMulti.run(connectTimeoutMs) == WL_CONNECTED) 
+  {
+    Serial.print("WiFi connected: ");
+    Serial.print(WiFi.SSID());
+    Serial.print(" ");
+    Serial.println(WiFi.RSSI());
+  }
+  else 
+  {
+    Serial.println("WiFi not connected!");
+  }
+  delay(1000);
+}
     
     
 ///////////////////////////////////////////////////////////////////////////////////////////////////
