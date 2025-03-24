@@ -971,13 +971,13 @@ const int output4 = 4;
 const int output2 = 2;
 
 // Set your Static IP address
-IPAddress local_IP(192, 168, 1, 184);
+//IPAddress local_IP(192, 168, 1, 184);
 // Set your Gateway IP address
-IPAddress gateway(192, 168, 1, 1);
+//IPAddress gateway(192, 168, 1, 1);
 
-IPAddress subnet(255, 255, 0, 0);
-IPAddress primaryDNS(8, 8, 8, 8);   //optional
-IPAddress secondaryDNS(8, 8, 4, 4); //optional
+//IPAddress subnet(255, 255, 0, 0);
+//IPAddress primaryDNS(8, 8, 8, 8);   //optional
+//IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
 void setup() {
   Serial.begin(115200);
@@ -989,9 +989,9 @@ void setup() {
   digitalWrite(output2, LOW);
 
   // Configures static IP address
-  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-    Serial.println("STA Failed to configure");
-  }
+  //if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+  //  Serial.println("STA Failed to configure");
+  //}
   
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
