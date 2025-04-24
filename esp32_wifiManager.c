@@ -197,3 +197,449 @@ void setup() {
 void loop() {
   server.handleClient();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////  wifi manager "index.html" //////////////////////////////////////////////////////
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP WEB SERVER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="topnav">
+      <h1>ESP WEB SERVER</h1>
+    </div>
+    <div class="content">
+      <div class="card-grid">
+        <div class="card">
+          <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 2</p>
+          <p>
+            <a href="on"><button class="button-on">ON</button></a>
+            <a href="off"><button class="button-off">OFF</button></a>
+          </p>
+          <p class="state">State: %STATE%</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+  
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// wifi manager "wifimanager.html" /////////////////////////////////////////
+  
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP Wi-Fi Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <div class="topnav">
+    <h1>ESP Wi-Fi Manager</h1>
+  </div>
+  <div class="content">
+    <div class="card-grid">
+      <div class="card">
+        <form action="/" method="POST">
+          <p>
+            <label for="ssid">SSID</label>
+            <input type="text" id ="ssid" name="ssid"><br>
+            <label for="pass">Password</label>
+            <input type="text" id ="pass" name="pass"><br>
+            <label for="ip">IP Address</label>
+            <input type="text" id ="ip" name="ip"><br>
+            <label for="gateway">Gateway Address</label>
+            <input type="text" id ="gateway" name="gateway"><br>
+            <input type ="submit" value ="Submit">
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////// wifi manager "style.css" ////////////////////////////////////////////////////////
+
+html {
+  font-family: Arial, Helvetica, sans-serif; 
+  display: inline-block; 
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.8rem; 
+  color: white;
+}
+
+p { 
+  font-size: 1.4rem;
+}
+
+.topnav { 
+  overflow: hidden; 
+  background-color: #0A1128;
+}
+
+body {  
+  margin: 0;
+}
+
+.content { 
+  padding: 5%;
+}
+
+.card-grid { 
+  max-width: 800px; 
+  margin: 0 auto; 
+  display: grid; 
+  grid-gap: 2rem; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.card { 
+  background-color: white; 
+  box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+}
+
+.card-title { 
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #034078
+}
+
+input[type=submit] {
+  border: none;
+  color: #FEFCFB;
+  background-color: #034078;
+  padding: 15px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  width: 100px;
+  margin-right: 10px;
+  border-radius: 4px;
+  transition-duration: 0.4s;
+  }
+
+input[type=submit]:hover {
+  background-color: #1282A2;
+}
+
+input[type=text], input[type=number], select {
+  width: 50%;
+  padding: 12px 20px;
+  margin: 18px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+label {
+  font-size: 1.2rem; 
+}
+.value{
+  font-size: 1.2rem;
+  color: #1282A2;  
+}
+.state {
+  font-size: 1.2rem;
+  color: #1282A2;
+}
+button {
+  border: none;
+  color: #FEFCFB;
+  padding: 15px 32px;
+  text-align: center;
+  font-size: 16px;
+  width: 100px;
+  border-radius: 4px;
+  transition-duration: 0.4s;
+}
+.button-on {
+  background-color: #034078;
+}
+.button-on:hover {
+  background-color: #1282A2;
+}
+.button-off {
+  background-color: #858585;
+}
+.button-off:hover {
+  background-color: #252524;
+} 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// wifi manager " esp32_wifiManager.ino ///////////////////////////////////
+/*********
+  Rui Santos & Sara Santos - Random Nerd Tutorials
+  Complete instructions at https://RandomNerdTutorials.com/esp32-wi-fi-manager-asyncwebserver/
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+*********/
+#include <Arduino.h>
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
+#include "LittleFS.h"
+
+// Create AsyncWebServer object on port 80
+AsyncWebServer server(80);
+
+// Search for parameter in HTTP POST request
+const char* PARAM_INPUT_1 = "ssid";
+const char* PARAM_INPUT_2 = "pass";
+const char* PARAM_INPUT_3 = "ip";
+const char* PARAM_INPUT_4 = "gateway";
+
+//Variables to save values from HTML form
+String ssid;
+String pass;
+String ip;
+String gateway;
+
+// File paths to save input values permanently
+const char* ssidPath = "/ssid.txt";
+const char* passPath = "/pass.txt";
+const char* ipPath = "/ip.txt";
+const char* gatewayPath = "/gateway.txt";
+
+IPAddress localIP;
+//IPAddress localIP(192, 168, 1, 200); // hardcoded
+
+// Set your Gateway IP address
+IPAddress localGateway;
+//IPAddress localGateway(192, 168, 1, 1); //hardcoded
+IPAddress subnet(255, 255, 0, 0);
+
+// Timer variables
+unsigned long previousMillis = 0;
+const long interval = 10000;  // interval to wait for Wi-Fi connection (milliseconds)
+
+// Set LED GPIO
+const int ledPin = 2;
+// Stores LED state
+
+String ledState;
+
+// Initialize LittleFS
+void initLittleFS() {
+  if (!LittleFS.begin(true)) {
+    Serial.println("An error has occurred while mounting LittleFS");
+  }
+  Serial.println("LittleFS mounted successfully");
+}
+
+// Read File from LittleFS
+String readFile(fs::FS &fs, const char * path){
+  Serial.printf("Reading file: %s\r\n", path);
+
+  File file = fs.open(path);
+  if(!file || file.isDirectory()){
+    Serial.println("- failed to open file for reading");
+    return String();
+  }
+  
+  String fileContent;
+  while(file.available()){
+    fileContent = file.readStringUntil('\n');
+    break;     
+  }
+  return fileContent;
+}
+
+// Write file to LittleFS
+void writeFile(fs::FS &fs, const char * path, const char * message){
+  Serial.printf("Writing file: %s\r\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  if(!file){
+    Serial.println("- failed to open file for writing");
+    return;
+  }
+  if(file.print(message)){
+    Serial.println("- file written");
+  } else {
+    Serial.println("- write failed");
+  }
+}
+
+// Initialize WiFi
+bool initWiFi() 
+{
+  if(ssid=="")
+  {
+    Serial.println("Undefined SSID.");
+    return false;
+  }
+  
+  WiFi.mode(WIFI_STA);
+  if(ip!="")
+  {
+    Serial.println("Assigned IP.");
+    localIP.fromString(ip.c_str());
+    localGateway.fromString(gateway.c_str());
+    if (!WiFi.config(localIP, localGateway, subnet)){
+      Serial.println("STA Failed to configure");
+      return false;
+    }
+  }else
+  {
+    Serial.println("Undefined IP.");
+  }
+
+
+
+ 
+  WiFi.begin(ssid.c_str(), pass.c_str());
+  Serial.println("Connecting to WiFi...");
+
+  unsigned long currentMillis = millis();
+  previousMillis = currentMillis;
+
+  while(WiFi.status() != WL_CONNECTED) {
+    currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      Serial.println("Failed to connect.");
+      return false;
+    }
+  }
+
+  Serial.println(WiFi.localIP());
+  return true;
+}
+
+// Replaces placeholder with LED state value
+String processor(const String& var) {
+  if(var == "STATE") {
+    if(digitalRead(ledPin)) {
+      ledState = "ON";
+    }
+    else {
+      ledState = "OFF";
+    }
+    return ledState;
+  }
+  return String();
+}
+
+void setup() {
+  // Serial port for debugging purposes
+  Serial.begin(115200);
+
+  initLittleFS();
+
+  // Set GPIO 2 as an OUTPUT
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  
+  // Load values saved in LittleFS
+  ssid = readFile(LittleFS, ssidPath);
+  pass = readFile(LittleFS, passPath);
+  ip = readFile(LittleFS, ipPath);
+  gateway = readFile (LittleFS, gatewayPath);
+  Serial.println(ssid);
+  Serial.println(pass);
+  Serial.println(ip);
+  Serial.println(gateway);
+
+  if(initWiFi()) {
+    // Route for root / web page
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(LittleFS, "/index.html", "text/html", false, processor);
+    });
+    server.serveStatic("/", LittleFS, "/");
+    
+    // Route to set GPIO state to HIGH
+    server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
+      digitalWrite(ledPin, HIGH);
+      request->send(LittleFS, "/index.html", "text/html", false, processor);
+    });
+
+    // Route to set GPIO state to LOW
+    server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+      digitalWrite(ledPin, LOW);
+      request->send(LittleFS, "/index.html", "text/html", false, processor);
+    });
+    server.begin();
+  }
+  else {
+    // Connect to Wi-Fi network with SSID and password
+    Serial.println("Setting AP (Access Point)");
+    // NULL sets an open Access Point
+    WiFi.softAP("ESP-WIFI-MANAGER", NULL);
+
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP); 
+
+    // Web Server Root URL
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/wifimanager.html", "text/html");
+    });
+    
+    server.serveStatic("/", LittleFS, "/");
+    
+    server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
+      int params = request->params();
+      for(int i=0;i<params;i++){
+        const AsyncWebParameter* p = request->getParam(i);
+        if(p->isPost()){
+          // HTTP POST ssid value
+          if (p->name() == PARAM_INPUT_1) {
+            ssid = p->value().c_str();
+            Serial.print("SSID set to: ");
+            Serial.println(ssid);
+            // Write file to save value
+            writeFile(LittleFS, ssidPath, ssid.c_str());
+          }
+          // HTTP POST pass value
+          if (p->name() == PARAM_INPUT_2) {
+            pass = p->value().c_str();
+            Serial.print("Password set to: ");
+            Serial.println(pass);
+            // Write file to save value
+            writeFile(LittleFS, passPath, pass.c_str());
+          }
+          // HTTP POST ip value
+          if (p->name() == PARAM_INPUT_3) {
+            ip = p->value().c_str();
+            Serial.print("IP Address set to: ");
+            Serial.println(ip);
+            // Write file to save value
+            writeFile(LittleFS, ipPath, ip.c_str());
+          }
+          // HTTP POST gateway value
+          if (p->name() == PARAM_INPUT_4) {
+            gateway = p->value().c_str();
+            Serial.print("Gateway set to: ");
+            Serial.println(gateway);
+            // Write file to save value
+            writeFile(LittleFS, gatewayPath, gateway.c_str());
+          }
+          //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        }
+      }
+      request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
+      delay(3000);
+      ESP.restart();
+    });
+    server.begin();
+  }
+}
+
+void loop() {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
