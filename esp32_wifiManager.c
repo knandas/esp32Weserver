@@ -1130,3 +1130,95 @@ void loop() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////  style.css //////////////////////////////////////////////////////////////////
+html {
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+h1 {
+  font-size: 1.8rem;
+  color: white;
+}
+.topnav {
+  overflow: hidden;
+  background-color: #0A1128;
+}
+body {
+  margin: 0;
+}
+.content { 
+  padding: 50px;
+}
+.card-grid {
+  max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  grid-gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.card {
+  background-color: white;
+  box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+}
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #034078
+}
+.state {
+  font-size: 1.2rem;
+  color:#1282A2;
+}
+button {
+  border: none;
+  color: #FEFCFB;
+  padding: 15px 32px;
+  text-align: center;
+  font-size: 16px;
+  width: 100px;
+  border-radius: 4px;
+  transition-duration: 0.4s;
+}
+.button-on {
+  background-color:#034078;
+}
+.button-on:hover {
+  background-color: #1282A2;
+}
+.button-off {
+  background-color:#858585;
+}
+.button-off:hover {
+  background-color: #252524;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// index.html //////////////////////////////////////////////////////
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP IOT DASHBOARD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="topnav">
+      <h1>ESP WEB SERVER</h1>
+    </div>
+    <div class="content">
+      <div class="card-grid">
+          <div class="card">
+            <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 2</p>
+            <p>
+              <a href="on"><button class="button-on">ON</button></a>
+              <a href="off"><button class="button-off">OFF</button></a>
+            </p>
+            <p class="state">State: %STATE%</p>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+////////////////////////////////////////end /////////////////////////////////  
