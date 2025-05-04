@@ -91,7 +91,7 @@ void setup()
    while (client.available()) 
     {
       char c = client.read();
-      Serial.write(c);
+      //Serial.write(c);
       payload=payload+c;
     }
    client.stop();
