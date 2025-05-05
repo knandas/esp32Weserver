@@ -321,3 +321,115 @@ void loop()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////
+//           END RemoteXY include          //
+/////////////////////////////////////////////
+
+#define PIN_BUTTON_01 4
+#define PIN_PUSHSWITCH_01 2
+#define PIN_SWITCH_01 13
+#include <Wire.h>
+#include <Adafruit_BMP280.h>
+#include <AHT20.h>
+AHT20 aht20;
+Adafruit_BMP280 bmp; // I2C
+unsigned long lastTime=0;
+
+void setup() 
+{
+  RemoteXY_Init (); 
+  
+  pinMode (PIN_BUTTON_01, OUTPUT);
+  pinMode (PIN_PUSHSWITCH_01, OUTPUT);
+  pinMode (PIN_SWITCH_01, OUTPUT);
+  
+  // TODO you setup code
+  Serial.begin(115200);
+  while ( !Serial ) delay(100);   // wait for native usb
+  Serial.println(F("BMP280 & AHT20 test"));
+  unsigned status;
+  status = bmp.begin();
+ 
+
+  if (!status) 
+  {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
+                      "try a different address!"));
+    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+  
+  
+    //while (1) delay(10);
+  }
+  
+  if (aht20.begin() == false)
+  {
+    Serial.println("AHT20 not detected. Please check wiring. Freezing.");
+    //while (1);
+  }
+
+  if (!status&&aht20.begin() == false) 
+  {
+    while (1);
+  }
+
+  /* Default settings from datasheet. */
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+}
+
+void loop() 
+{ 
+  RemoteXY_Handler ();
+  
+  digitalWrite(PIN_BUTTON_01, (RemoteXY.button_01==0)?LOW:HIGH);
+  digitalWrite(PIN_PUSHSWITCH_01, (RemoteXY.pushSwitch_01==0)?LOW:HIGH);
+  digitalWrite(PIN_SWITCH_01, (RemoteXY.switch_01==0)?LOW:HIGH);
+  
+  // TODO you loop code
+  // use the RemoteXY structure for data transfer
+  // do not call delay(), use instead RemoteXY_delay() 
+  if(millis()>lastTime+1000)
+  {
+    Serial.print(F("BMP280: "));
+    Serial.print(F("Temperature = "));
+    Serial.print(bmp.readTemperature());
+    Serial.print(" *C  ");
+
+    Serial.print(F("Pressure = "));
+    Serial.print(bmp.readPressure());
+    Serial.print(" Pa  ");
+
+
+    Serial.print(F("Approx altitude = "));
+    Serial.print(bmp.readAltitude(1013.25)); /* Adjusted to local forecast! */
+    Serial.println(" m");
+
+
+
+    //Get the new temperature and humidity value
+    Serial.print(F("AHT20: "));
+    float temperature = aht20.getTemperature();
+    float humidity = aht20.getHumidity();
+    //Print the results
+    Serial.print("Temperature: ");
+    Serial.print(temperature, 2);
+    Serial.print(" C\t");
+    Serial.print("Humidity: ");
+    Serial.print(humidity, 2);
+    Serial.println("% RH");
+    Serial.println();
+    RemoteXY.linearbar_01=temperature;
+    RemoteXY.value_01=humidity;
+    lastTime=millis();
+  }
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
