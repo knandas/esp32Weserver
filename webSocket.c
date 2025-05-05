@@ -213,7 +213,7 @@ void loop() {
 #include <ESPAsyncWebServer.h>
 
 // Replace with your network credentials
-const char* ssid = ELEC302";
+const char* ssid = "ELEC302";
 const char* password = "elec1234";
 
 bool ledState = 0;
