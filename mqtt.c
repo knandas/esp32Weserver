@@ -1,58 +1,91 @@
 /////////////////////servo 1 /////////////////////////////////////////////////////
-#include <Servo.h>
-#define SERVO_PIN 25 // ESP32 pin GIOP25 connected to servo motor
+//////////////////// ledc servo //////////////////////////
 
-Servo servoMotor;
+
+unsigned long delayTime1=0,delayTime2=0 ; 
+#define servo0 26
+#define servo1 25
+#define freq  50
+#define resolution  16
+
+ #define COUNT_LOW 2676
+ #define COUNT_HIGH 7553
 
 void setup() 
 {
-  servoMotor.attach(SERVO_PIN);  // attaches the servo on ESP32 pin
-  servoMotor.write(90):
+  Serial.begin(115200);
+  Serial.println("Start");
+  ledcSetup(1, 50, 16);
+  ledcAttachPin(26, 1);
+  ledcSetup(2, 50, 16);
+  ledcAttachPin(25, 1);
 }
 
 void loop() 
 {
- sweep();
-}	
-
-void sweep()
-{
-    // rotates from 0 degrees to 180 degrees
-  for (int pos = 0; pos <= 180; pos += 1) 
+  for(int vol=COUNT_LOW;vol<COUNT_HIGH;vol=vol+10)
   {
-    servoMotor.write(pos); // in steps of 1 degree
-    delay(15); // waits 15ms to reach the position
+   ledcWrite(1, vol);
+   ledcWrite(2, vol);
+   Serial.println(vol);
+   delay(10);
   }
 
-  // rotates from 180 degrees to 0 degrees
-  for (int pos = 180; pos >= 0; pos -= 1) 
+  for(int vol=COUNT_HIGH;vol>COUNT_LOW;vol=vol-10)
   {
-    servoMotor.write(pos);
-    delay(15); // waits 15ms to reach the position
+   ledcWrite(1, vol);
+   ledcWrite(2, vol);
+   Serial.println(vol);
+   delay(10);
   }
 }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// servo 2 /////////////////////////////////////////////
 
-#include <Servo.h>
-#define SERVO_PIN 25 // ESP32 pin GIOP25 connected to servo motor
-#define VR 36
-Servo servoMotor;
+//////////////////// ledc servo //////////////////////////
+
+
+unsigned long delayTime1=0,delayTime2=0 ; 
+#define servo0Pin 26
+#define servo1Pin 25
+#define servo0 1
+#define servo1 2
+#define freq  50
+#define resolution  16
+#define Ain 36
+#define COUNT_LOW 2676
+#define COUNT_HIGH 7553
+int VR
+int pos,count;
+
 
 void setup() 
 {
-  servoMotor.attach(SERVO_PIN);  // attaches the servo on ESP32 pin
-  servoMotor.write(90);
+  Serial.begin(115200);
+  Serial.println("Start");
+  ledcSetup(servo0, freq, resolution);
+  ledcAttachPin(servo0Pin, 1);
+  ledcSetup(servo1, freq, resolution);
+  ledcAttachPin(servo1Pin, 2;
 }
 
 void loop() 
 {
-  int reading =analogRead(VR);
-  int pos=map(reading,0,4096,0,180);
-  servoMotor.write(pos); 
-  delay(15);
+   VR=analogRead(Ain);
+   pos=map(VR,0,4095,0,180);
+   count=map(VR,0,4095,COUNT_LOW,COUNT_HIGH);
+   ledcWrite(servo0,count );
+   ledcWrite(servo0, vol);
+   Serial.printf("position=%d count=%d\n",pos,count);
+   delay(10);
+ 
+
+  }
 }
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
