@@ -69,7 +69,7 @@ void setup()
   ledcSetup(servo0, freq, resolution);
   ledcAttachPin(servo0Pin, 1);
   ledcSetup(servo1, freq, resolution);
-  ledcAttachPin(servo1Pin, 2;
+  ledcAttachPin(servo1Pin, 2);
 }
 
 void loop() 
