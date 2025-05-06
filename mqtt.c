@@ -78,7 +78,7 @@ void loop()
    pos=map(VR,0,4095,0,180);
    count=map(VR,0,4095,COUNT_LOW,COUNT_HIGH);
    ledcWrite(servo0,count );
-   ledcWrite(servo0, vol);
+   ledcWrite(servo1,count);
    Serial.printf("position=%d count=%d\n",pos,count);
    delay(10);
  
