@@ -100,7 +100,7 @@ PubSubClient mqttClient(wifiClient);
 const char* ssid = "ELEC302";
 const char* password = "elec1234";
 
-char *mqttServer = "broker.hivemq.com";
+char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
 
 void setupMQTT() {
@@ -177,7 +177,7 @@ PubSubClient mqttClient(wifiClient);
 const char* ssid = "ELEC302";  //ELEC302_plus
 const char* password = "elec1234";
 
-char *mqttServer = "broker.hivemq.com";
+char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
 //const char* mqttUser = "yourInstanceUsername";
 //const char* mqttPassword = "yourInstancePassword";
@@ -345,7 +345,7 @@ PubSubClient mqttClient(wifiClient);
 const char* ssid = "ELEC302";  //ELEC302_plus
 const char* password = "elec1234";
 
-char *mqttServer = "broker.hivemq.com";
+char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
 //const char* mqttUser = "yourInstanceUsername";
 //const char* mqttPassword = "yourInstancePassword";
@@ -565,24 +565,21 @@ bool myBounce::update()
 ///////////////////////////////
 //example3   M2M //////////////////////////////////////////////////////////
 
+// example3 esp32 JSON+servo
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "myBounce.h"
-#include <Servo.h>
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient); 
 
-//const char* ssid = "wifi1971_2";
-//const char* password = "fedcba9876";
-//const char* ssid = "ELEC302";  //ELEC302_plus
-//const char* password = "elec1234";
+const char* ssid = "ELEC302";  //ELEC302_plus
+const char* password = "elec1234";
 
-char *mqttServer = "broker.hivemq.com";
+char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
-//const char* mqttUser = "yourInstanceUsername";
-//const char* mqttPassword = "yourInstancePassword";
-#define SERVO_PIN 25
+
+#define servo1 25
 #define out1 4
 #define out2 2
 #define out3 13
@@ -592,8 +589,12 @@ int mqttPort = 1883;
 #define sw3 32
 #define sw4 33
 #define in1 36
+#define freq  50
+#define resolution  16
+#define COUNT_LOW 2676
+#define COUNT_HIGH 7553
 
-Servo servoMotor;
+unsigned long delayTime1=0,delayTime2=0 ; 
 myBounce SW1(sw1);
 myBounce SW2(sw2);
 myBounce SW3(sw3);
@@ -602,11 +603,9 @@ int state1=1,state2=1,state3=1,state4=1;
 unsigned long lastMillis;
 unsigned int delayTime=1000;
 unsigned int now=0,lastRead=0;
-#define topic1 "mut/miia0107/group1" 
-#define topic2 "mut/miia0107/board2" 
 #define thisDevice 1
-#define otherDevice 2
 
+#define topic1 "mut/knandas/group1" ///////edit topic///// 
 
 void setupMQTT() 
 {
@@ -617,18 +616,18 @@ void setupMQTT()
 void reconnect() 
 {
   Serial.println("Connecting to MQTT Broker...");
-    while (!mqttClient.connected()) {
-      Serial.println("Reconnecting to MQTT Broker..");
-      String clientId = "ESP32Client-";
-      clientId += String(random(0xffff), HEX);
-      //client.connect(clientId.c_str(), mqttUser, mqttPassword
-      if (mqttClient.connect(clientId.c_str())) 
-      {
-        Serial.println("Connected.");
-        // subscribe to topic
-        mqttClient.subscribe(topic1);   //in topic
-      
-      }      
+  while (!mqttClient.connected()) 
+  {
+    Serial.println("Reconnecting to MQTT Broker..");
+    String clientId = "ESP32Client-";
+    clientId += String(random(0xffff), HEX);
+    if (mqttClient.connect(clientId.c_str())) 
+    {
+      Serial.println("Connected.");
+      // subscribe to topic
+      mqttClient.subscribe(topic1);   //in topic
+    }
+    delay(1000);      
   }
 }
 
@@ -637,7 +636,7 @@ void setup()
   Serial.begin(115200);
   pinMode(out1,OUTPUT); pinMode(out2,OUTPUT);
   pinMode(out3,OUTPUT); pinMode(out4,OUTPUT);
-  WiFi.begin(ssid, password);
+   WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
@@ -645,58 +644,48 @@ void setup()
     Serial.println("");
     Serial.println("Connected to Wi-Fi");
   setupMQTT();
-  servoMotor.attach(SERVO_PIN);  // attaches the servo on ESP32 pin
-  servoMotor.write(90);
-
+  ledcSetup(1, 50, 16);
+  ledcAttachPin(servo1, 1);
+  ledcWrite(1,map(90,0,180,COUNT_LOW,COUNT_HIGH));
 }
-
 
 void loop() 
 {
   if (!mqttClient.connected()) reconnect();
   mqttClient.loop();
   if(SW1.update()==1)
-  { 
-    state1=!state1;  sendMQTT(); //digitalWrite(out1,state1);
-  }
+  { state1=!state1;  sendMQTT(); digitalWrite(out1,state1);}
   if(SW2.update()==1)  
-  { 
-    state2=!state2;  sendMQTT(); //digitalWrite(out2,state2);
-  }
+  { state2=!state2;  sendMQTT(); digitalWrite(out2,state2);}
   if(SW3.update()==1)
-  { 
-    state3=!state3; sendMQTT(); // digitalWrite(out3,state3);
-  }
+  { state3=!state3; sendMQTT();  digitalWrite(out3,state3);}
   if(SW4.update()==1)
-  { 
-    state4=!state4;  sendMQTT(); //digitalWrite(out4,state4);
+  { state4=!state4;  sendMQTT(); digitalWrite(out4,state4);}
+
+  if ((millis() - lastMillis) > delayTime)
+  {
+    now = map(analogRead(in1),0,4095,0,180);
+    if((now>lastRead+1)||(now<lastRead-1))
+    {
+      sendMQTT();   
+      lastRead=now;
+    }
+    lastMillis=millis();
+    delay(10);
   }
- 
- if ((millis() - lastMillis) > delayTime)
- {
-   now = map(analogRead(in1),0,4095,0,180);
-   if((now>lastRead+1)||(now<lastRead-1))
-   {
-     sendMQTT();   
-     lastRead=now;
-   }
-   
-   delay(10);
- }
 
 }
 
 void sendMQTT()
 {
   StaticJsonDocument<256> doc;
-  doc["device"] = otherDevice;
+  doc["device"] = thisDevice;
   doc["ADC1"] = map(analogRead(in1),0,4095,0,180);
-  JsonArray state = doc.createNestedArray("state");
-  state.add(state1);
-  state.add(state2);
-  state.add(state3);
-  state.add(state4);
-  
+  doc["state1"] =state1;
+  doc["state2"] =state2;
+  doc["state3"] =state3;
+  doc["state4"] =state4;
+
   char out[128];
   int b =serializeJson(doc, out);
   Serial.print("bytes = ");
@@ -708,43 +697,63 @@ void sendMQTT()
 
 void callback(char* topic, byte* payload, unsigned int length) 
 {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
   char str[length+1];
-  
   int i=0;
   for (i=0;i<length;i++) 
   {
-  Serial.print((char)payload[i]);
-  str[i]=(char)payload[i];
+    Serial.print((char)payload[i]);
+    str[i]=(char)payload[i];
   }
   str[i] = 0; // Null termination
+  String payload2=str;
   Serial.println();
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.println("] ");
-  
-  
+
   StaticJsonDocument <256> doc;
-  // deserializeJson(doc,str); can use string instead of payload
   deserializeJson(doc,payload);
   unsigned int device = doc["device"];
   if(device==thisDevice)
   {
-    unsigned int ADC1 = doc["ADC1"];
-    unsigned int state1 = doc["state"][0]; digitalWrite(out1,state1);
-    unsigned int state2 = doc["state"][1]; digitalWrite(out2,state2);
-    unsigned int state3 = doc["state"][2]; digitalWrite(out3,state3);
-    unsigned int state4 = doc["state"][3]; digitalWrite(out4,state4);
-
+    if(payload2.indexOf("servo")>0)
+    {
+      unsigned int servo = doc["servo"];
+      ledcWrite(1,map(servo,0,180,COUNT_LOW,COUNT_HIGH));
+      Serial.print("servo =");Serial.println(servo);
+    }
+    if(payload2.indexOf("state1")>0)
+    {
+      unsigned int st1 = doc["state1"];
+      if(st1==1) state1=1; else state1=0;
+    }
+    if(payload2.indexOf("state2")>0)
+    {
+      unsigned int st2 = doc["state2"];
+      if(st2==1) state2=1; else state2=0;
+    }
+    if(payload2.indexOf("state3")>0)
+    {
+      unsigned int st3 = doc["state3"];
+      if(st3==1) state3=1; else state3=0;
+    }
+    if(payload2.indexOf("state4")>0)
+    {
+      unsigned int st4 = doc["state4"];
+      if(st4==1) state4=1; else state4=0;
+    }
+    digitalWrite(out1,state1);
+    digitalWrite(out2,state2);
+    digitalWrite(out3,state3);
+    digitalWrite(out4,state4);
     Serial.print("device:");Serial.println(device);
-    Serial.print("ADC1 =");Serial.println(ADC1);
     Serial.print("state =");Serial.print(state1);
     Serial.print(state2); Serial.print(state3);
     Serial.println(state4);
-    servoMotor.write(ADC1); 
     delay(15);
-
   }
 }
+
 
 //สวัสดีครับ
 
