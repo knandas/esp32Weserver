@@ -58,7 +58,7 @@ unsigned long delayTime1=0,delayTime2=0 ;
 #define Ain 36
 #define COUNT_LOW 2676
 #define COUNT_HIGH 7553
-int VR
+int VR;
 int pos,count;
 
 
