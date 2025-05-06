@@ -628,7 +628,7 @@ void loop() {
     if (httpCode > 0) 
     {
         payload = http.getString();
-        Serial.print("HttpCode: "+httpCode+"  ");    
+        Serial.print("HttpCode: "+httpCode);    
         Serial.println("Payload: "+payload);    
         if(payload=="0")digitalWrite(LED_BUILTIN, LOW);
         if(payload=="1")digitalWrite(LED_BUILTIN, HIGH);
