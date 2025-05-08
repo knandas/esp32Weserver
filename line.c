@@ -178,10 +178,105 @@ function doPost(e) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// ArtronShop LineMessging 1 ///////////////////////////////////////////////////////////////////////
+#include <WiFi.h> // นำเข้าไลบรารี่ WiFi
+#include <ArtronShop_LineMessaging.h> // นำเข้าไลบารี่ ArtronShop_LineMessaging
+
+const char* ssid = "ELEC302"; // ชื่อ WiFi
+const char* password = "elec1234"; // รหัสผ่าน WiFi
+#define LINE_TOKEN "LINE Token" // Channel access token
+
+void setup() 
+{
+  Serial.begin(115200); // เริ่มต้นใช้ Serial ที่ความเร็ว 115200
+  while (!Serial) { delay(100); }
+
+  // We start by connecting to a WiFi network
+
+  Serial.println();
+  Serial.println("******************************************************");
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password); // เริ่มต้นเชื่อมต่อ WiFi
+
+  while (WiFi.status() != WL_CONNECTED) { // วนลูปหากยังเชื่อมต่อ WiFi ไม่สำเร็จ
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  LINE.begin(LINE_TOKEN); // เริ่มต้นใช้ LINE Notify
+
+  if (LINE.send("User ID/Group ID", "รถโดนขโมย")) {  // ถ้าส่งข้อความ "รถโดนขโมย" ไปที่ LINE สำเร็จ
+    Serial.println("Send notify successful"); // ส่งข้อความ "Send notify successful" ไปที่ Serial Monitor
+  } else { // ถ้าส่งไม่สำเร็จ
+    Serial.printf("Send notify fail. check your token (code: %d)\n", LINE.status_code); // ส่งข้อความ "Send notify fail" ไปที่ Serial Monitor
+  }
+}
+
+void loop() {
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+https://developers.line.biz/en/docs/messaging-api/sticker-list/#sticker-definitions     link sticker
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// ArtronShop LineMessging 2 sticker ////////////////////////////////////////////////////////////
+#include <WiFi.h> 
+#include <ArtronShop_LineMessaging.h> 
+const char* ssid = "ELEC302"; 
+const char* password = "elec1234"; 
+#define LINE_TOKEN "LINE Token" 
+
+void setup() {
+  Serial.begin(115200); 
+  while (!Serial) { delay(100); }
+  Serial.println();
+  Serial.println("******************************************************");
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password); 
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  LINE.begin(LINE_TOKEN); 
+
+  LINE_Messaging_Massage_Option_t option; // สร้างตัวแปร option
+
+  // https://developers.line.biz/en/docs/messaging-api/sticker-list/
+  option.sticker.package_id = 446; // sticker Package ID
+  option.sticker.id = 1988; // sticker ID
+
+  if (LINE.send("User ID/Group ID", "รถโดยขโมย", &option)) { 
+    Serial.println("Send notify successful"); 
+  } else { 
+    Serial.printf("Send notify fail. check your token (code: %d)\n", LINE.status_code); 
+  }
+}
+
+void loop() {
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////// Gscript for lineMessging ///////////////////////////////////////////////////
 
 var sheet_id = "YOUR SHEET ID";
 var sheet_name = "NAME OF YOUR SHEET";
