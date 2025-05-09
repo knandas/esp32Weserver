@@ -271,8 +271,41 @@ void loop() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////  https://pic.in.th/  ///////////////////////////////////////////////////////
 
+LINE_Messaging_Massage_Option_t option; // สร้างตัวแปร option
+
+  // https://developers.line.biz/en/docs/messaging-api/sticker-list/
+  //option.sticker.package_id = 446; // sticker Package ID
+  //option.sticker.id = 1988; // sticker ID
+  option.image.url = "https://img2.pic.in.th/pic/557160.jpg";
+
+  if (LINE.send("User ID/Group ID", "pop pop", &option)) { 
+    Serial.println("Send notify successful"); 
+  } else { 
+    Serial.printf("Send notify fail. check your token (code: %d)\n", LINE.status_code); 
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////// map ///////////////////////////////////////////////////////////////
+
+LINE_Messaging_Massage_Option_t option; // สร้างตัวแปร option
+
+  // https://developers.line.biz/en/docs/messaging-api/sticker-list/
+  //option.sticker.package_id = 446; // sticker Package ID
+  //option.sticker.id = 1988; // sticker ID
+  //option.image.url = "https://img2.pic.in.th/pic/557160.jpg";
+  option.map.service = LONGDO_MAP; // ใช้แผนที่จาก Longdo Map
+  // option.map.service = GOOGLE_MAP; // ใช้แผนที่จาก Google Map
+  option.map.lat = 13.84250; // ละติจูด
+  option.map.lng = 100.85547; // ลองจิจูด
+  option.map.zoom = 20; // ระยะซูม กำหนดได้ 1 - 20
+  // option.map.api_key = "Google Map API Key"; // กรอก API Key หากใช้ Google Map
+
+  if (LINE.send("User ID/Group ID", "pop pop", &option)) { 
+    Serial.println("Send notify successful"); 
+  } else { 
+    Serial.printf("Send notify fail. check your token (code: %d)\n", LINE.status_code); 
+  }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,7 +376,7 @@ function sendLineMessageAPI()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// line LDR .ino ////////////////////////////////////////////////////
 // esp32 +ldr motion detect -> line Bot
 #include "WiFi.h"
 #include <HTTPClient.h>
@@ -441,6 +474,134 @@ void sendData()
     http.end();
   }  
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  line take4  GScript ///////////////////////////////////////////////////////////////
+
+var sheet_id = "17CY9HCEs75kBF-VMxLE89Srg";
+var sheet_data = "data";
+var sheet_config = "config";
+//var sheet_id = "id";
+
+//var accessToken =  "lvoiWlK5pc+TdbL9fV7sFwPgC2e/1PrIU0MgUxGGxi5ZhVMcDN/PBn+5OZCuBA9wdB04t89/1O/w1cDnyilFU=";
+
+//var groupId = "C26f91799dbe8f63fa6f73";
+//var groupId = "U7e22c2897d5741755b0e7";
+
+
+//var sheet = SpreadsheetApp.openById(sheet_id).getSheetByName(sheet_data);
+//var config = SpreadsheetApp.openById(sheet_id).getSheetByName(sheet_config);
+//var accessToken = config.getRange('B1').getValue();
+
+
+function doGet(e)
+{
+  var ss = SpreadsheetApp.openById(sheet_id);
+  var sheet = ss.getSheetByName(sheet_data); 
+  var sensor = Number(e.parameter.sensor);
+  //Logger.log('old2: '+oldRow);
+  //var sensor =1234;
+  sheet.appendRow([new Date(),sensor]);
+  sheet.
+  var sheet2 = ss.getSheetByName(sheet_config); 
+  var uid= sheet2.getRange('B2').getValue();
+  
+  sendLineMessageAPI(uid);
+ 
+}
+
+var dataReport = {
+    date: " ",
+    message: " ",
+    sensor: " "
+};
+
+
+function sendLineMessageAPI()
+{
+  var ss = SpreadsheetApp.openById(sheet_id);
+  var sheet = ss.getSheetByName(sheet_config);
+  var accessToken = sheet.getRange('B1').getValue();
+  var uid = sheet.getRange('B2').getValue();
+  var sheet2 = ss.getSheetByName(sheet_data);
+  var lastRow = sheet2.getLastRow();
+  dataReport.date = DateConvert(sheet2.getRange(lastRow,1).getValue()); // ข้อความอยู่ที่คอลัมน์ A
+  dataReport.sensor = sheet2.getRange(lastRow,2 ).getValue(); // ข้อความอยู่ที่คอลัมน์ B
+  // หากต้องการเปลี่ยนเป็นข้อความแจ้งเตือน สามารถแก้ไขด้านที่ message
+  dataReport.message = sheet.getRange('B4').getValue();
+
+  var flexMessage = JSON.parse(sheet.getRange("B6").getValue());
+  replaceVariables(flexMessage,dataReport);
+  Logger.log(JSON.stringify(flexMessage));
+  var lineHeader = {
+    "Content-Type": "application/json",
+    "Authorization" : "Bearer " + accessToken
+  };
+
+  var url = "https://api.line.me/v2/bot/message/push";
+
+  var payload = {
+    to: uid,
+    messages: [
+      {
+        "type": "flex",
+        "altText": "This is a Flex Message",
+        "contents": flexMessage,
+      },
+    ],
+  };
+  Logger.log(JSON.stringify(payload));
+
+  var options = {
+    "method": "post",
+    "headers": lineHeader,
+    "payload": JSON.stringify(payload),
+  };
+
+  var response = UrlFetchApp.fetch(url, options);
+  Logger.log(response.getContentText());
+}
+
+
+function replaceVariables(obj, variables) {
+  for (var key in obj) {
+    if (typeof obj[key] === "string") {
+      // Replace variables in strings
+      obj[key] = replaceVariablesInString(obj[key], variables);
+    } else if (typeof obj[key] === "object") {
+      // Recursively replace variables in nested objects
+      replaceVariables(obj[key], variables);
+    }
+  }
+}
+
+function replaceVariablesInString(str, variables) {
+  for (var key in variables) {
+    var placeholder = "{{" + key + "}}";
+    if (str.includes(placeholder)) {
+      str = str.replace(placeholder, variables[key]);
+    }
+  }
+  return str;
+}
+
+
+function formatNumber(number) {
+  return number.toLocaleString();
+}
+
+function DateConvert(date) {
+
+    var yyyy = date.getFullYear().toString();
+    var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
+    var dd  = date.getDate().toString();
+
+    return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + yyyy;
+}
+
+
+
 
 ////////////////////////////////////////end ////////////////////////////////////////////////
 
