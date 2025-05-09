@@ -474,7 +474,116 @@ void sendData()
     http.end();
   }  
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////  flex message //////////////////////////////////////////////////////////////
 
+"{
+  ""type"": ""bubble"",
+  ""body"": {
+    ""type"": ""box"",
+    ""layout"": ""vertical"",
+    ""contents"": [
+      {
+        ""type"": ""text"",
+        ""text"": ""{{message}}"",
+        ""weight"": ""bold"",
+        ""color"": ""#1DB446"",
+        ""size"": ""sm""
+      },
+      {
+        ""type"": ""text"",
+        ""text"": ""MUT"",
+        ""weight"": ""bold"",
+        ""size"": ""xxl"",
+        ""margin"": ""md""
+      },
+      {
+        ""type"": ""text"",
+        ""text"": ""140 ถ.เชื่อมสัมพันธ์ หนองจอก กทม 10530"",
+        ""size"": ""xs"",
+        ""color"": ""#aaaaaa"",
+        ""wrap"": true
+      },
+      {
+        ""type"": ""separator"",
+        ""margin"": ""xxl""
+      },
+      {
+        ""type"": ""box"",
+        ""layout"": ""vertical"",
+        ""margin"": ""xxl"",
+        ""spacing"": ""sm"",
+        ""contents"": [
+          {
+            ""type"": ""box"",
+            ""layout"": ""horizontal"",
+            ""contents"": [
+              {
+                ""type"": ""text"",
+                ""text"": ""sensor"",
+                ""size"": ""sm"",
+                ""color"": ""#555555"",
+                ""flex"": 0
+              },
+              {
+                ""type"": ""text"",
+                ""text"": ""{{sensor}}"",
+                ""size"": ""sm"",
+                ""color"": ""#111111"",
+                ""align"": ""end""
+              }
+            ]
+          },
+          {
+            ""type"": ""separator"",
+            ""margin"": ""xxl""
+          },
+          {
+            ""type"": ""box"",
+            ""layout"": ""horizontal"",
+            ""contents"": [
+              {
+                ""type"": ""image"",
+                ""url"": ""https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png"",
+                ""backgroundColor"": ""#ffffff""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        ""type"": ""separator"",
+        ""margin"": ""xxl""
+      },
+      {
+        ""type"": ""box"",
+        ""layout"": ""horizontal"",
+        ""margin"": ""md"",
+        ""contents"": [
+          {
+            ""type"": ""text"",
+            ""text"": ""digital & embedded"",
+            ""size"": ""xs"",
+            ""color"": ""#aaaaaa"",
+            ""flex"": 0
+          },
+          {
+            ""type"": ""text"",
+            ""text"": ""671111xxxx"",
+            ""color"": ""#aaaaaa"",
+            ""size"": ""xs"",
+            ""align"": ""end""
+          }
+        ]
+      }
+    ]
+  },
+  ""styles"": {
+    ""footer"": {
+      ""separator"": true
+    }
+  }
+}"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  line take4  GScript ///////////////////////////////////////////////////////////////
