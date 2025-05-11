@@ -85,7 +85,7 @@ int sensorValue = 0;
 #define relay1 4
 bool light=0;
 float avg1=analogRead(LdrPin);
-unsigned long delayTime1=0;
+unsigned long delayTime1=30;
 
 void setup() 
 {
