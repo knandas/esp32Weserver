@@ -612,7 +612,7 @@ function doGet(e)
   //Logger.log('old2: '+oldRow);
   //var sensor =1234;
   sheet.appendRow([new Date(),sensor]);
-  sheet.
+  
   var sheet2 = ss.getSheetByName(sheet_config); 
   var uid= sheet2.getRange('B2').getValue();
   
