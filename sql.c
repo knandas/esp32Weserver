@@ -572,3 +572,490 @@ var chartP = new Highcharts.Chart({
 </html>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// esp-style.css /////////////////////////////////////////////////////////////////////////////////
+/**
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/cloud-weather-station-esp32-esp8266/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+**/
+body {
+    width: 60%;
+    margin: auto;
+    text-align: center;
+    font-family: Arial;
+    top: 50%;
+    left: 50%;
+}
+
+@media screen and (max-width: 800px) {
+    body {
+        width: 100%;
+    }
+}
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h2 { font-size: 2.5rem; }
+
+.header {
+	 padding: 1rem;
+	 margin: 0 0 2rem 0;
+	 background: #f2f2f2;
+}
+
+h1 {
+    font-size: 2rem;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.content {
+    display: flex;
+}
+
+@media screen and (max-width: 500px) /* Mobile */ {
+    .content {
+        flex-direction: column;
+    }
+}
+
+.mask {
+    position: relative;
+    overflow: hidden;
+    display: block;
+    width: 12.5rem;
+    height: 6.25rem;
+    margin: 1.25rem;
+}
+
+.semi-circle {
+    position: relative;
+    display: block;
+    width: 12.5rem;
+    height: 6.25rem;
+    background: linear-gradient(to right, #3498db 0%, #05b027 33%, #f1c40f 70%, #c0392b 100%);
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+}
+
+.semi-circle::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    z-index: 2;
+    display: block;
+    width: 8.75rem;
+    height: 4.375rem;
+    margin-left: -4.375rem;
+    background: #fff;
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+}
+
+.semi-circle--mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12.5rem;
+    height: 12.5rem;
+    background: transparent;
+    transform: rotate(120deg) translate3d(0, 0, 0);
+    transform-origin: center center;
+    backface-visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+.semi-circle--mask::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0%;
+    z-index: 2;
+    display: block;
+    width: 12.625rem;
+    height: 6.375rem;
+    margin: -1px 0 0 -1px;
+    background: #f2f2f2;
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+}
+
+.gauge--2 .semi-circle { background: #3498db; }
+
+.gauge--2 .semi-circle--mask { transform: rotate(20deg) translate3d(0, 0, 0); }
+
+#tableReadings { border-collapse: collapse; }
+
+#tableReadings td, #tableReadings th {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+#tableReadings tr:nth-child(even){ background-color: #f2f2f2; }
+
+#tableReadings tr:hover { background-color: #ddd; }
+
+#tableReadings th {
+    padding: 10px;
+    background-color: #2f4468;
+    color: white;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////// esp-database.php ////////////////////////////////////////////////////
+<!--
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/cloud-weather-station-esp32-esp8266/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+-->
+<?php
+$servername = "localhost";
+
+// REPLACE with your Database name
+$dbname = "testuser";
+// REPLACE with Database user
+$username = "testUSER";
+// REPLACE with Database user password
+$password = "HewPpUu*r26V9EUg";
+
+  function insertReading($sensor, $location, $value1, $value2, $value3) {
+    global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "INSERT INTO SensorData (sensor, location, value1, value2, value3)
+    VALUES ('" . $sensor . "', '" . $location . "', '" . $value1 . "', '" . $value2 . "', '" . $value3 . "')";
+
+    if ($conn->query($sql) === TRUE) {
+      return "New record created successfully";
+    }
+    else {
+      return "Error: " . $sql . "<br>" . $conn->error;
+    }
+    $conn->close();
+  }
+  
+  function getAllReadings($limit) {
+    global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT id, sensor, location, value1, value2, value3, reading_time FROM SensorData order by reading_time desc limit " . $limit;
+    if ($result = $conn->query($sql)) {
+      return $result;
+    }
+    else {
+      return false;
+    }
+    $conn->close();
+  }
+  function getLastReadings() {
+    global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT id, sensor, location, value1, value2, value3, reading_time FROM SensorData order by reading_time desc limit 1" ;
+    if ($result = $conn->query($sql)) {
+      return $result->fetch_assoc();
+    }
+    else {
+      return false;
+    }
+    $conn->close();
+  }
+
+  function minReading($limit, $value) {
+     global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT MIN(" . $value . ") AS min_amount FROM (SELECT " . $value . " FROM SensorData order by reading_time desc limit " . $limit . ") AS min";
+    if ($result = $conn->query($sql)) {
+      return $result->fetch_assoc();
+    }
+    else {
+      return false;
+    }
+    $conn->close();
+  }
+
+  function maxReading($limit, $value) {
+     global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT MAX(" . $value . ") AS max_amount FROM (SELECT " . $value . " FROM SensorData order by reading_time desc limit " . $limit . ") AS max";
+    if ($result = $conn->query($sql)) {
+      return $result->fetch_assoc();
+    }
+    else {
+      return false;
+    }
+    $conn->close();
+  }
+
+  function avgReading($limit, $value) {
+     global $servername, $username, $password, $dbname;
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT AVG(" . $value . ") AS avg_amount FROM (SELECT " . $value . " FROM SensorData order by reading_time desc limit " . $limit . ") AS avg";
+    if ($result = $conn->query($sql)) {
+      return $result->fetch_assoc();
+    }
+    else {
+      return false;
+    }
+    $conn->close();
+  }
+?>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////  esp-weather-station.php  /////////////////////////////////////////////////////////////////////////////////
+
+<!--
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/cloud-weather-station-esp32-esp8266/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+-->
+<?php
+    include_once('esp-database.php');
+    if (isset($_GET["readingsCount"])){
+      $data = $_GET["readingsCount"];
+      $data = trim($data);
+      $data = stripslashes($data);
+      $data = htmlspecialchars($data);
+      $readings_count = $_GET["readingsCount"];
+    }
+    // default readings count set to 20
+    else {
+      $readings_count = 20;
+    }
+
+    $last_reading = getLastReadings();
+    $last_reading_temp = $last_reading["value1"];
+    $last_reading_humi = $last_reading["value2"];
+    $last_reading_time = $last_reading["reading_time"];
+
+    // Uncomment to set timezone to - 1 hour (you can change 1 to any number)
+    //$last_reading_time = date("Y-m-d H:i:s", strtotime("$last_reading_time - 1 hours"));
+    // Uncomment to set timezone to + 7 hours (you can change 7 to any number)
+    //$last_reading_time = date("Y-m-d H:i:s", strtotime("$last_reading_time + 7 hours"));
+
+    $min_temp = minReading($readings_count, 'value1');
+    $max_temp = maxReading($readings_count, 'value1');
+    $avg_temp = avgReading($readings_count, 'value1');
+
+    $min_humi = minReading($readings_count, 'value2');
+    $max_humi = maxReading($readings_count, 'value2');
+    $avg_humi = avgReading($readings_count, 'value2');
+?>
+
+<!DOCTYPE html>
+<html>
+    <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+        <link rel="stylesheet" type="text/css" href="esp-style.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    <header class="header">
+        <h1>📊 ESP Weather Station</h1>
+        <form method="get">
+            <input type="number" name="readingsCount" min="1" placeholder="Number of readings (<?php echo $readings_count; ?>)">
+            <input type="submit" value="UPDATE">
+        </form>
+    </header>
+<body>
+    <p>Last reading: <?php echo $last_reading_time; ?></p>
+    <section class="content">
+	    <div class="box gauge--1">
+	    <h3>TEMPERATURE</h3>
+              <div class="mask">
+			  <div class="semi-circle"></div>
+			  <div class="semi-circle--mask"></div>
+			</div>
+		    <p style="font-size: 30px;" id="temp">--</p>
+		    <table cellspacing="5" cellpadding="5">
+		        <tr>
+		            <th colspan="3">Temperature <?php echo $readings_count; ?> readings</th>
+	            </tr>
+		        <tr>
+		            <td>Min</td>
+                    <td>Max</td>
+                    <td>Average</td>
+                </tr>
+                <tr>
+                    <td><?php echo $min_temp['min_amount']; ?> &deg;C</td>
+                    <td><?php echo $max_temp['max_amount']; ?> &deg;C</td>
+                    <td><?php echo round($avg_temp['avg_amount'], 2); ?> &deg;C</td>
+                </tr>
+            </table>
+        </div>
+        <div class="box gauge--2">
+            <h3>HUMIDITY</h3>
+            <div class="mask">
+                <div class="semi-circle"></div>
+                <div class="semi-circle--mask"></div>
+            </div>
+            <p style="font-size: 30px;" id="humi">--</p>
+            <table cellspacing="5" cellpadding="5">
+                <tr>
+                    <th colspan="3">Humidity <?php echo $readings_count; ?> readings</th>
+                </tr>
+                <tr>
+                    <td>Min</td>
+                    <td>Max</td>
+                    <td>Average</td>
+                </tr>
+                <tr>
+                    <td><?php echo $min_humi['min_amount']; ?> %</td>
+                    <td><?php echo $max_humi['max_amount']; ?> %</td>
+                    <td><?php echo round($avg_humi['avg_amount'], 2); ?> %</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+<?php
+    echo   '<h2> View Latest ' . $readings_count . ' Readings</h2>
+            <table cellspacing="5" cellpadding="5" id="tableReadings">
+                <tr>
+                    <th>ID</th>
+                    <th>Sensor</th>
+                    <th>Location</th>
+                    <th>Value 1</th>
+                    <th>Value 2</th>
+                    <th>Value 3</th>
+                    <th>Timestamp</th>
+                </tr>';
+
+    $result = getAllReadings($readings_count);
+        if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $row_id = $row["id"];
+            $row_sensor = $row["sensor"];
+            $row_location = $row["location"];
+            $row_value1 = $row["value1"];
+            $row_value2 = $row["value2"];
+            $row_value3 = $row["value3"];
+            $row_reading_time = $row["reading_time"];
+            // Uncomment to set timezone to - 1 hour (you can change 1 to any number)
+            //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time - 1 hours"));
+            // Uncomment to set timezone to + 7 hours (you can change 7 to any number)
+            //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time + 7 hours"));
+
+            echo '<tr>
+                    <td>' . $row_id . '</td>
+                    <td>' . $row_sensor . '</td>
+                    <td>' . $row_location . '</td>
+                    <td>' . $row_value1 . '</td>
+                    <td>' . $row_value2 . '</td>
+                    <td>' . $row_value3 . '</td>
+                    <td>' . $row_reading_time . '</td>
+                  </tr>';
+        }
+        echo '</table>';
+        $result->free();
+    }
+?>
+
+<script>
+    var value1 = <?php echo $last_reading_temp; ?>;
+    var value2 = <?php echo $last_reading_humi; ?>;
+    setTemperature(value1);
+    setHumidity(value2);
+
+    function setTemperature(curVal){
+    	//set range for Temperature in Celsius -5 Celsius to 38 Celsius
+    	var minTemp = -5.0;
+    	var maxTemp = 38.0;
+        //set range for Temperature in Fahrenheit 23 Fahrenheit to 100 Fahrenheit
+    	//var minTemp = 23;
+    	//var maxTemp = 100;
+
+    	var newVal = scaleValue(curVal, [minTemp, maxTemp], [0, 180]);
+    	$('.gauge--1 .semi-circle--mask').attr({
+    		style: '-webkit-transform: rotate(' + newVal + 'deg);' +
+    		'-moz-transform: rotate(' + newVal + 'deg);' +
+    		'transform: rotate(' + newVal + 'deg);'
+    	});
+    	$("#temp").text(curVal + ' ºC');
+    }
+
+    function setHumidity(curVal){
+    	//set range for Humidity percentage 0 % to 100 %
+    	var minHumi = 0;
+    	var maxHumi = 100;
+
+    	var newVal = scaleValue(curVal, [minHumi, maxHumi], [0, 180]);
+    	$('.gauge--2 .semi-circle--mask').attr({
+    		style: '-webkit-transform: rotate(' + newVal + 'deg);' +
+    		'-moz-transform: rotate(' + newVal + 'deg);' +
+    		'transform: rotate(' + newVal + 'deg);'
+    	});
+    	$("#humi").text(curVal + ' %');
+    }
+
+    function scaleValue(value, from, to) {
+        var scale = (to[1] - to[0]) / (from[1] - from[0]);
+        var capped = Math.min(from[1], Math.max(from[0], value)) - from[0];
+        return ~~(capped * scale + to[0]);
+    }
+</script>
+</body>
+</html>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
