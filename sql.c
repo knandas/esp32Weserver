@@ -1058,4 +1058,755 @@ $password = "HewPpUu*r26V9EUg";
 </html>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////// sql create table //////////////////////////////////////////////////////////////////////////	
 	
+CREATE TABLE Outputs (
+    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(64),
+    board INT(6),
+    gpio INT(6),
+    state INT(6)
+);
+INSERT INTO `Outputs`(`name`, `board`, `gpio`, `state`) VALUES ("Built-in LED", 1, 2, 0);
+
+CREATE TABLE Boards (
+    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    board INT(6),
+    last_request TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT INTO `Boards`(`board`) VALUES (1);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  eso-database2.php /////////////////////////////////////////////////////////////////////////////
+<?php
+$servername = "localhost";
+
+// REPLACE with your Database name
+$dbname = "testuser";
+// REPLACE with Database user
+$username = "testUSER";
+// REPLACE with Database user password
+$password = "HewPpUu*r26V9EUg";
+
+    function createOutput($name, $board, $gpio, $state) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "INSERT INTO Outputs (name, board, gpio, state)
+        VALUES ('" . $name . "', '" . $board . "', '" . $gpio . "', '" . $state . "')";
+
+       if ($conn->query($sql) === TRUE) {
+            return "New output created successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+    function deleteOutput($id) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "DELETE FROM Outputs WHERE id='". $id .  "'";
+
+       if ($conn->query($sql) === TRUE) {
+            return "Output deleted successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+    function updateOutput($id, $state) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "UPDATE Outputs SET state='" . $state . "' WHERE id='". $id .  "'";
+
+       if ($conn->query($sql) === TRUE) {
+            return "Output state updated successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+    function getAllOutputs() {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT id, name, board, gpio, state FROM Outputs ORDER BY board";
+        if ($result = $conn->query($sql)) {
+            return $result;
+        }
+        else {
+            return false;
+        }
+        $conn->close();
+    }
+
+    function getAllOutputStates($board) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT gpio, state FROM Outputs WHERE board='" . $board . "'";
+        if ($result = $conn->query($sql)) {
+            return $result;
+        }
+        else {
+            return false;
+        }
+        $conn->close();
+    }
+
+    function getOutputBoardById($id) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT board FROM Outputs WHERE id='" . $id . "'";
+        if ($result = $conn->query($sql)) {
+            return $result;
+        }
+        else {
+            return false;
+        }
+        $conn->close();
+    }
+
+    function updateLastBoardTime($board) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "UPDATE Boards SET last_request=now() WHERE board='". $board .  "'";
+
+       if ($conn->query($sql) === TRUE) {
+            return "Output state updated successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+    function getAllBoards() {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT board, last_request FROM Boards ORDER BY board";
+        if ($result = $conn->query($sql)) {
+            return $result;
+        }
+        else {
+            return false;
+        }
+        $conn->close();
+    }
+
+    function getBoard($board) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "SELECT board, last_request FROM Boards WHERE board='" . $board . "'";
+        if ($result = $conn->query($sql)) {
+            return $result;
+        }
+        else {
+            return false;
+        }
+        $conn->close();
+    }
+
+    function createBoard($board) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "INSERT INTO Boards (board) VALUES ('" . $board . "')";
+
+       if ($conn->query($sql) === TRUE) {
+            return "New board created successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+    function deleteBoard($board) {
+        global $servername, $username, $password, $dbname;
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $sql = "DELETE FROM Boards WHERE board='". $board .  "'";
+
+       if ($conn->query($sql) === TRUE) {
+            return "Board deleted successfully";
+        }
+        else {
+            return "Error: " . $sql . "<br>" . $conn->error;
+        }
+        $conn->close();
+    }
+
+?>
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// esp-outputs-action.php ////////////////////////////////////////////////////////////
+<?php
+    include_once('esp-database2.php');
+
+    $action = $id = $name = $gpio = $state = "";
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $action = test_input($_POST["action"]);
+        if ($action == "output_create") {
+            $name = test_input($_POST["name"]);
+            $board = test_input($_POST["board"]);
+            $gpio = test_input($_POST["gpio"]);
+            $state = test_input($_POST["state"]);
+            $result = createOutput($name, $board, $gpio, $state);
+
+            $result2 = getBoard($board);
+            if(!$result2->fetch_assoc()) {
+                createBoard($board);
+            }
+            echo $result;
+        }
+        else {
+            echo "No data posted with HTTP POST.";
+        }
+    }
+
+    if ($_SERVER["REQUEST_METHOD"] == "GET") {
+        $action = test_input($_GET["action"]);
+        if ($action == "outputs_state") {
+            $board = test_input($_GET["board"]);
+            $result = getAllOutputStates($board);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    $rows[$row["gpio"]] = $row["state"];
+                }
+            }
+            echo json_encode($rows);
+            $result = getBoard($board);
+            if($result->fetch_assoc()) {
+                updateLastBoardTime($board);
+            }
+        }
+        else if ($action == "output_update") {
+            $id = test_input($_GET["id"]);
+            $state = test_input($_GET["state"]);
+            $result = updateOutput($id, $state);
+            echo $result;
+        }
+        else if ($action == "output_delete") {
+            $id = test_input($_GET["id"]);
+            $board = getOutputBoardById($id);
+            if ($row = $board->fetch_assoc()) {
+                $board_id = $row["board"];
+            }
+            $result = deleteOutput($id);
+            $result2 = getAllOutputStates($board_id);
+            if(!$result2->fetch_assoc()) {
+                deleteBoard($board_id);
+            }
+            echo $result;
+        }
+        else {
+            echo "Invalid HTTP request.";
+        }
+    }
+
+    function test_input($data) {
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data);
+        return $data;
+    }
+?>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////// esp-style2.css  /////////////////////////////////////////////////////
+/**
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/control-esp32-esp8266-gpios-from-anywhere/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+**/
+
+html {
+    font-family: Arial;
+    display: inline-block;
+    text-align: center;
+}
+
+h2 {
+    font-size: 3.0rem;
+}
+
+body {
+    max-width: 600px;
+    margin:0px auto;
+    padding-bottom: 25px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 120px;
+    height: 68px;
+}
+
+.switch input {
+    display: none
+}
+
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #949494;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 52px;
+    width: 52px;
+    left: 8px; bottom: 8px;
+    background-color: #fff;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 68px;
+}
+
+input:checked+.slider {
+    background-color: #008B74;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(52px);
+    -ms-transform: translateX(52px);
+    transform: translateX(52px);
+}
+
+input[type=text], input[type=number], select {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type=submit] {
+    width: 100%;
+    background-color: #008B74;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type=submit]:hover {
+    background-color: #005a4c;
+}
+
+div {
+    text-align: left;
+    border-radius: 4px;
+    background-color: #efefef;
+    padding: 20px;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////  esp-outputs.php  //////////////////////////////////////////////////////////////
+<!--
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/control-esp32-esp8266-gpios-from-anywhere/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+-->
+<?php
+    include_once('esp-database2.php');
+
+    $result = getAllOutputs();
+    $html_buttons = null;
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row["state"] == "1"){
+                $button_checked = "checked";
+            }
+            else {
+                $button_checked = "";
+            }
+            $html_buttons .= '<h3>' . $row["name"] . ' - Board '. $row["board"] . ' - GPIO ' . $row["gpio"] . ' (<i><a onclick="deleteOutput(this)" href="javascript:void(0);" id="' . $row["id"] . '">Delete</a></i>)</h3><label class="switch"><input type="checkbox" onchange="updateOutput(this)" id="' . $row["id"] . '" ' . $button_checked . '><span class="slider"></span></label>';
+        }
+    }
+
+    $result2 = getAllBoards();
+    $html_boards = null;
+    if ($result2) {
+        $html_boards .= '<h3>Boards</h3>';
+        while ($row = $result2->fetch_assoc()) {
+            $row_reading_time = $row["last_request"];
+            // Uncomment to set timezone to - 1 hour (you can change 1 to any number)
+            //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time - 1 hours"));
+
+            // Uncomment to set timezone to + 4 hours (you can change 4 to any number)
+            //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time + 7 hours"));
+            $html_boards .= '<p><strong>Board ' . $row["board"] . '</strong> - Last Request Time: '. $row_reading_time . '</p>';
+        }
+    }
+?>
+
+<!DOCTYPE HTML>
+<html>
+    <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="esp-style2.css">
+        <title>ESP Output Control</title>
+    </head>
+<body>
+    <h2>ESP Output Control</h2>
+    <?php echo $html_buttons; ?>
+    <br><br>
+    <?php echo $html_boards; ?>
+    <br><br>
+    <div><form onsubmit="return createOutput();">
+        <h3>Create New Output</h3>
+        <label for="outputName">Name</label>
+        <input type="text" name="name" id="outputName"><br>
+        <label for="outputBoard">Board ID</label>
+        <input type="number" name="board" min="0" id="outputBoard">
+        <label for="outputGpio">GPIO Number</label>
+        <input type="number" name="gpio" min="0" id="outputGpio">
+        <label for="outputState">Initial GPIO State</label>
+        <select id="outputState" name="state">
+          <option value="0">0 = OFF</option>
+          <option value="1">1 = ON</option>
+        </select>
+        <input type="submit" value="Create Output">
+        <p><strong>Note:</strong> in some devices, you might need to refresh the page to see your newly created buttons or to remove deleted buttons.</p>
+    </form></div>
+
+    <script>
+        function updateOutput(element) {
+            var xhr = new XMLHttpRequest();
+            if(element.checked){
+                xhr.open("GET", "esp-outputs-action.php?action=output_update&id="+element.id+"&state=1", true);
+            }
+            else {
+                xhr.open("GET", "esp-outputs-action.php?action=output_update&id="+element.id+"&state=0", true);
+            }
+            xhr.send();
+        }
+
+        function deleteOutput(element) {
+            var result = confirm("Want to delete this output?");
+            if (result) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "esp-outputs-action.php?action=output_delete&id="+element.id, true);
+                xhr.send();
+                alert("Output deleted");
+                setTimeout(function(){ window.location.reload(); });
+            }
+        }
+
+        function createOutput(element) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "esp-outputs-action.php", true);
+
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    alert("Output created");
+                    setTimeout(function(){ window.location.reload(); });
+                }
+            }
+            var outputName = document.getElementById("outputName").value;
+            var outputBoard = document.getElementById("outputBoard").value;
+            var outputGpio = document.getElementById("outputGpio").value;
+            var outputState = document.getElementById("outputState").value;
+            var httpRequestData = "action=output_create&name="+outputName+"&board="+outputBoard+"&gpio="+outputGpio+"&state="+outputState;
+            xhr.send(httpRequestData);
+        }
+    </script>
+</body>
+</html>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////// esp-outputs-action.php /////////////////////////////////////////////////////
+
+<?php
+    include_once('esp-database2.php');
+
+    $action = $id = $name = $gpio = $state = "";
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $action = test_input($_POST["action"]);
+        if ($action == "output_create") {
+            $name = test_input($_POST["name"]);
+            $board = test_input($_POST["board"]);
+            $gpio = test_input($_POST["gpio"]);
+            $state = test_input($_POST["state"]);
+            $result = createOutput($name, $board, $gpio, $state);
+
+            $result2 = getBoard($board);
+            if(!$result2->fetch_assoc()) {
+                createBoard($board);
+            }
+            echo $result;
+        }
+        else {
+            echo "No data posted with HTTP POST.";
+        }
+    }
+
+    if ($_SERVER["REQUEST_METHOD"] == "GET") {
+        $action = test_input($_GET["action"]);
+        if ($action == "outputs_state") {
+            $board = test_input($_GET["board"]);
+            $result = getAllOutputStates($board);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    $rows[$row["gpio"]] = $row["state"];
+                }
+            }
+            echo json_encode($rows);
+            $result = getBoard($board);
+            if($result->fetch_assoc()) {
+                updateLastBoardTime($board);
+            }
+        }
+        else if ($action == "output_update") {
+            $id = test_input($_GET["id"]);
+            $state = test_input($_GET["state"]);
+            $result = updateOutput($id, $state);
+            echo $result;
+        }
+        else if ($action == "output_delete") {
+            $id = test_input($_GET["id"]);
+            $board = getOutputBoardById($id);
+            if ($row = $board->fetch_assoc()) {
+                $board_id = $row["board"];
+            }
+            $result = deleteOutput($id);
+            $result2 = getAllOutputStates($board_id);
+            if(!$result2->fetch_assoc()) {
+                deleteBoard($board_id);
+            }
+            echo $result;
+        }
+        else {
+            echo "Invalid HTTP request.";
+        }
+    }
+
+    function test_input($data) {
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data);
+        return $data;
+    }
+?>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// esp32_mysql_GPIO.ino  ////////////////////////////////////////////////////////////////
+
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/control-esp32-esp8266-gpios-from-anywhere/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+*/
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <Arduino_JSON.h>
+
+const char* ssid = "ELEC302";
+const char* password = "elec1234";
+
+//Your IP address or domain name with URL path
+const char* serverName = "https://192.168.1.xxx/esp-outputs-action.php?action=outputs_state&board=1";
+
+// Update interval time set to 5 seconds
+const long interval = 5000;
+unsigned long previousMillis = 0;
+
+String outputsState;
+
+void setup() {
+  Serial.begin(115200);
+  
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting");
+  while(WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  
+  if(currentMillis - previousMillis >= interval) {
+     // Check WiFi connection status
+    if(WiFi.status()== WL_CONNECTED ){ 
+      outputsState = httpGETRequest(serverName);
+      Serial.println(outputsState);
+      JSONVar myObject = JSON.parse(outputsState);
+  
+      // JSON.typeof(jsonVar) can be used to get the type of the var
+      if (JSON.typeof(myObject) == "undefined") {
+        Serial.println("Parsing input failed!");
+        return;
+      }
+    
+      Serial.print("JSON object = ");
+      Serial.println(myObject);
+    
+      // myObject.keys() can be used to get an array of all the keys in the object
+      JSONVar keys = myObject.keys();
+    
+      for (int i = 0; i < keys.length(); i++) {
+        JSONVar value = myObject[keys[i]];
+        Serial.print("GPIO: ");
+        Serial.print(keys[i]);
+        Serial.print(" - SET to: ");
+        Serial.println(value);
+        pinMode(atoi(keys[i]), OUTPUT);
+        digitalWrite(atoi(keys[i]), atoi(value));
+      }
+      // save the last HTTP GET Request
+      previousMillis = currentMillis;
+    }
+    else {
+      Serial.println("WiFi Disconnected");
+    }
+  }
+}
+
+String httpGETRequest(const char* serverName) {
+  WiFiClientSecure *client = new WiFiClientSecure;
+  
+  // set secure client without certificate
+  client->setInsecure();
+  HTTPClient https;
+    
+  // Your IP address with path or Domain name with URL path 
+  https.begin(*client, serverName);
+  
+  // Send HTTP POST request
+  int httpResponseCode = https.GET();
+  
+  String payload = "{}"; 
+  
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    payload = https.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  https.end();
+
+  return payload;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
