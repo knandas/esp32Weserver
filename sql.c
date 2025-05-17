@@ -1077,7 +1077,7 @@ CREATE TABLE Boards (
 INSERT INTO `Boards`(`board`) VALUES (1);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////  eso-database2.php /////////////////////////////////////////////////////////////////////////////
+////////////////////////  esp-database2.php /////////////////////////////////////////////////////////////////////////////
 <?php
 $servername = "localhost";
 
@@ -1617,81 +1617,6 @@ div {
 </body>
 </html>
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////// esp-outputs-action.php /////////////////////////////////////////////////////
-
-<?php
-    include_once('esp-database2.php');
-
-    $action = $id = $name = $gpio = $state = "";
-
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $action = test_input($_POST["action"]);
-        if ($action == "output_create") {
-            $name = test_input($_POST["name"]);
-            $board = test_input($_POST["board"]);
-            $gpio = test_input($_POST["gpio"]);
-            $state = test_input($_POST["state"]);
-            $result = createOutput($name, $board, $gpio, $state);
-
-            $result2 = getBoard($board);
-            if(!$result2->fetch_assoc()) {
-                createBoard($board);
-            }
-            echo $result;
-        }
-        else {
-            echo "No data posted with HTTP POST.";
-        }
-    }
-
-    if ($_SERVER["REQUEST_METHOD"] == "GET") {
-        $action = test_input($_GET["action"]);
-        if ($action == "outputs_state") {
-            $board = test_input($_GET["board"]);
-            $result = getAllOutputStates($board);
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $rows[$row["gpio"]] = $row["state"];
-                }
-            }
-            echo json_encode($rows);
-            $result = getBoard($board);
-            if($result->fetch_assoc()) {
-                updateLastBoardTime($board);
-            }
-        }
-        else if ($action == "output_update") {
-            $id = test_input($_GET["id"]);
-            $state = test_input($_GET["state"]);
-            $result = updateOutput($id, $state);
-            echo $result;
-        }
-        else if ($action == "output_delete") {
-            $id = test_input($_GET["id"]);
-            $board = getOutputBoardById($id);
-            if ($row = $board->fetch_assoc()) {
-                $board_id = $row["board"];
-            }
-            $result = deleteOutput($id);
-            $result2 = getAllOutputStates($board_id);
-            if(!$result2->fetch_assoc()) {
-                deleteBoard($board_id);
-            }
-            echo $result;
-        }
-        else {
-            echo "Invalid HTTP request.";
-        }
-    }
-
-    function test_input($data) {
-        $data = trim($data);
-        $data = stripslashes($data);
-        $data = htmlspecialchars($data);
-        return $data;
-    }
-?>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// esp32_mysql_GPIO.ino  ////////////////////////////////////////////////////////////////
@@ -1808,5 +1733,119 @@ String httpGETRequest(const char* serverName) {
   return payload;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// esp8266 ////////////////////////////////////////////////////////////////////////////
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/control-esp32-esp8266-gpios-from-anywhere/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+*/
 
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
+#include <Arduino_JSON.h>
+
+const char* ssid = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+//Your IP address or domain name with URL path
+//const char* serverName = "https://example.com/esp-outputs-action.php?action=outputs_state&board=1";
+
+// Update interval time set to 5 seconds
+const long interval = 5000;
+unsigned long previousMillis = 0;
+
+String outputsState;
+
+void setup() {
+  Serial.begin(115200);
+  
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting");
+  while(WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  
+  if(currentMillis - previousMillis >= interval) {
+     // Check WiFi connection status
+    if(WiFi.status()== WL_CONNECTED ){ 
+      outputsState = httpGETRequest(serverName);
+      Serial.println(outputsState);
+      JSONVar myObject = JSON.parse(outputsState);
+  
+      // JSON.typeof(jsonVar) can be used to get the type of the var
+      if (JSON.typeof(myObject) == "undefined") {
+        Serial.println("Parsing input failed!");
+        return;
+      }
+    
+      Serial.print("JSON object = ");
+      Serial.println(myObject);
+    
+      // myObject.keys() can be used to get an array of all the keys in the object
+      JSONVar keys = myObject.keys();
+    
+      for (int i = 0; i < keys.length(); i++) {
+        JSONVar value = myObject[keys[i]];
+        Serial.print("GPIO: ");
+        Serial.print(keys[i]);
+        Serial.print(" - SET to: ");
+        Serial.println(value);
+        pinMode(atoi(keys[i]), OUTPUT);
+        digitalWrite(atoi(keys[i]), atoi(value));
+      }
+      // save the last HTTP GET Request
+      previousMillis = currentMillis;
+    }
+    else {
+      Serial.println("WiFi Disconnected");
+    }
+  }
+}
+
+String httpGETRequest(const char* serverName) {
+  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+
+  // Ignore SSL certificate validation
+  client->setInsecure();
+
+  HTTPClient https;
+    
+  // Your IP address with path or Domain name with URL path 
+  https.begin(*client, serverName);
+  
+  // Send HTTP POST request
+  int httpResponseCode = https.GET();
+  
+  String payload = "{}"; 
+  
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    payload = https.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  https.end();
+
+  return payload;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
