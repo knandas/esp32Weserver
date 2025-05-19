@@ -472,10 +472,7 @@ int mqttPort = 1883;
 #define sw3 32
 #define sw4 33
 #define in1 36
-#define freq  50
-#define resolution  16
-#define COUNT_LOW 2676
-#define COUNT_HIGH 7553
+
 
 unsigned long delayTime1=0,delayTime2=0 ; 
 myBounce SW1(sw1);
@@ -676,5 +673,70 @@ void readSensor()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////// myBounce.h /////////////////////////////////
+/*
+ * myBounce.h
+ */
+#ifndef MYBOUNCE_H
+#define MYBOUNCE_H
+#include <Arduino.h>
+
+    
+class myBounce
+{
+  public:
+   myBounce(byte pin);
+   bool update();
+  private:
+   byte _pin;
+   bool _sw_state;
+   bool _last_sw_state;
+   bool _buttonstate;
+   bool _change;
+   unsigned long _time; 
+};
+
+#endif
+
+//////////////////////////////////////////////////////////////
+////////////////// myBounce.cpp /////////////////////////////
+
+/*
+ * myBounce.cpp
+ */
+
+#include "myBounce.h"
+
+myBounce::myBounce(byte pin)
+{
+   pinMode(pin, INPUT_PULLUP);
+  _pin = pin;
+}
+
+bool myBounce::update()
+{
+  _change=0;
+  _sw_state=digitalRead(_pin);
+  if(_sw_state!=_last_sw_state)
+  {
+    _time=millis();
+  }
+  
+  if((millis()-_time)>50)
+  {
+    if(_sw_state!=_buttonstate)
+    {
+      _buttonstate=_sw_state;
+      if(_buttonstate==HIGH)
+      {
+        _change=1;
+        _buttonstate=_sw_state;
+      }
+    }
+  }
+  _last_sw_state=_sw_state;
+  return _change;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
