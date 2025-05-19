@@ -257,8 +257,8 @@ unsigned long timerDelay = 30000;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient); 
 
-const char* ssid = "wifi1971_2";  //ELEC302_plus
-const char* password = "fedcba9876";
+const char* ssid = "ELEC302";  //ELEC302_plus
+const char* password = "elec1234";
 
 char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
