@@ -102,6 +102,8 @@ const char* password = "elec1234";
 char *mqttServer = "broker.emqx.io";
 int mqttPort = 1883;
 
+#define ledPin1 4
+
 void setupMQTT() {
   mqttClient.setServer(mqttServer, mqttPort);
   mqttClient.setCallback(callback);
@@ -125,7 +127,7 @@ void reconnect() {
 void setup() 
 {
   Serial.begin(115200);
-  pinMode(18,OUTPUT);
+  pinMode(ledPin1,OUTPUT);
   WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
@@ -155,11 +157,11 @@ void callback(char* topic, byte* message, unsigned int length)
    // Switch on the LED if an 1 was received as first character
   if ((char)message[0] == '1') 
   {
-    digitalWrite(18, HIGH); 
+    digitalWrite(ledPin1, HIGH); 
     Serial.println(" light1 on ");  
   } else 
   {
-    digitalWrite(18, LOW); 
+    digitalWrite(ledPin1, LOW); 
     Serial.println(" light1 off ");  
   }
 }
