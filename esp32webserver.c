@@ -1,4 +1,6 @@
 https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/ 
+
+https://www.silabs.com/documents/public/software/CP210x_Windows_Drivers.zip
 ////////////////////////////code 0 Blink ////////////////////////////////
 
 /*
