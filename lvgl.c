@@ -2323,11 +2323,12 @@ platform = https://github.com/pioarduino/platform-espressif32/releases/download/
 board = esp32dev
 framework = arduino
 
+monitor_speed = 115200
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////  main.cpp //////////////////////////////////////////////////////////////////////////
-  #include <Arduino.h>
+ #include <Arduino.h>
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 TFT_eSPI tft = TFT_eSPI();
@@ -2370,16 +2371,16 @@ void touchscreen_read(lv_indev_t * indev, lv_indev_data_t * data) {
     // Get Touchscreen points
     TS_Point p = touchscreen.getPoint();
 
-      // x=p.x;
-      // y=p.y;
-      // Serial.print("raw x,y = ");
-      // Serial.print(x);
-      // Serial.print(",");
-      // Serial.println(y);
+      x=p.x;
+      y=p.y;
+      Serial.print("raw x,y = ");
+      Serial.print(x);
+      Serial.print(",");
+      Serial.println(y);
     // Calibrate Touchscreen points with map function to the correct width and height
     
-    y = map(p.y, 324,3761, 1, 240); //was 200 3700
-    x = map(p.x, 225,3673, 1, 320); // was 240 3800
+    y = map(p.x, 3724,277, 1, 240); //was 200 3700
+    x = map(p.y, 180,3686 ,1, 320); // was 240 3800
     z = p.z;
 
     data->state = LV_INDEV_STATE_PRESSED;
@@ -2425,14 +2426,14 @@ void setup()
   touchscreen.begin(touchscreenSPI);
   // Set the Touchscreen rotation in landscape mode
   // Note: in some displays, the touchscreen might be upside down, so you might need to set the rotation to 0: touchscreen.setRotation(0);
-  touchscreen.setRotation(1);
+  touchscreen.setRotation(0);
 
   // Create a display object
   lv_display_t * disp;
   // Initialize the TFT display using the TFT_eSPI library
   disp = lv_tft_espi_create(SCREEN_WIDTH, SCREEN_HEIGHT, draw_buf, sizeof(draw_buf));
   lv_display_set_buffers(disp, draw_buf, NULL, sizeof(draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
-  lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_270);
+  lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_0);
   tft.setRotation(1);
   //tft.invertDisplay(1);// this changes the color assignment
     
@@ -2459,7 +2460,6 @@ void loop()
   ui_tick();
 
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
