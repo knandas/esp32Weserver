@@ -2465,16 +2465,179 @@ void loop()
 //////////////////////////////////////////////  /src/ui/action.c //////////////////////////////////////////////////////
 
 #include <stdbool.h>
+
+bool g_eez_event_is_available = false;
+int action_code = 0;
+int action_target=0;
+
 #include "actions.h"
 
-lv_event_t g_eez_event = {};
-bool g_eez_event_is_available = false;
-
-void action_set_global_eez_event(lv_event_t *e)
+void action_btn_next(lv_event_t *e) 
 {
-    g_eez_event = *e;
-    g_eez_event_is_available = true;
+     // Get the code of the event
+    lv_event_code_t code = lv_event_get_code(e);
+    // Get the object that triggered the event
+    lv_obj_t * btn = lv_event_get_target(e);
+
+    //if(code == LV_EVENT_CLICKED) 
+    {
+       action_code=code;
+       action_target=(int)btn;
+       g_eez_event_is_available = true;
+    }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// main.cpp   btn  //////////////////////////////////////////////////////
+
+#include <Arduino.h>
+#include <lvgl.h>
+#include <TFT_eSPI.h>
+TFT_eSPI tft = TFT_eSPI();
+
+#include "ui/ui.h"
+
+//extern lv_event_t g_eez_event;
+extern bool g_eez_event_is_available;
+extern int action_code;
+extern int action_target;
+
+
+#include <XPT2046_Touchscreen.h>
+
+// Touchscreen pins
+#define XPT2046_IRQ 36   // T_IRQ
+#define XPT2046_MOSI 32  // T_DIN
+#define XPT2046_MISO 39  // T_OUT
+#define XPT2046_CLK 25   // T_CLK
+#define XPT2046_CS 33    // T_CS
+
+SPIClass touchscreenSPI = SPIClass(VSPI);
+XPT2046_Touchscreen touchscreen(XPT2046_CS, XPT2046_IRQ);
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+// Touchscreen coordinates: (x, y) and pressure (z)
+int x, y, z;
+
+#define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
+uint32_t draw_buf[DRAW_BUF_SIZE / 4];
+
+// If logging is enabled, it will inform the user about what is happening in the library
+void log_print(lv_log_level_t level, const char * buf) {
+  LV_UNUSED(level);
+  Serial.println(buf);
+  Serial.flush();
+}
+
+
+// Get the Touchscreen data
+void touchscreen_read(lv_indev_t * indev, lv_indev_data_t * data) {
+  // Checks if Touchscreen was touched, and prints X, Y and Pressure (Z)
+  if(touchscreen.tirqTouched() && touchscreen.touched()) {
+    // Get Touchscreen points
+    TS_Point p = touchscreen.getPoint();
+
+      // x=p.x;
+      // y=p.y;
+      // Serial.print("raw x,y = ");
+      // Serial.print(x);
+      // Serial.print(",");
+      // Serial.println(y);
+    // Calibrate Touchscreen points with map function to the correct width and height
+    
+    y = map(p.x, 3724,277, 1, 240); //was 200 3700
+    x = map(p.y, 180,3686 ,1, 320); // was 240 3800
+    z = p.z;
+
+    data->state = LV_INDEV_STATE_PRESSED;
+
+    // Set the coordinates
+    data->point.x = x;
+    data->point.y = y;
+
+    // Print Touchscreen info about X, Y and Pressure (Z) on the Serial Monitor
+    // Serial.print("X = ");
+    // Serial.print(x);
+    // Serial.print(" | Y = ");
+    // Serial.print(y);
+    // Serial.print(" | Pressure = ");
+    // Serial.print(z);
+    // Serial.println();
+  }
+  else {
+    data->state = LV_INDEV_STATE_RELEASED;
+  }
+}
+
+
+
+void setup() 
+{
+  String LVGL_Arduino = String("LVGL Library Version: ") + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
+  Serial.begin(115200);
+  Serial.println(LVGL_Arduino);
+  
+  // Start LVGL
+  lv_init();
+  /* Set a tick source so that LVGL will know how much time elapsed. */
+  lv_tick_set_cb((lv_tick_get_cb_t)millis);
+
+  // Register print function for debugging  
+  #if LV_USE_LOG != 0
+  lv_log_register_print_cb(log_print);
+  #endif  
+  
+
+  // Start the SPI for the touchscreen and init the touchscreen
+  touchscreenSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  touchscreen.begin(touchscreenSPI);
+  // Set the Touchscreen rotation in landscape mode
+  // Note: in some displays, the touchscreen might be upside down, so you might need to set the rotation to 0: touchscreen.setRotation(0);
+  touchscreen.setRotation(0);
+
+  // Create a display object
+  lv_display_t * disp;
+  // Initialize the TFT display using the TFT_eSPI library
+  disp = lv_tft_espi_create(SCREEN_WIDTH, SCREEN_HEIGHT, draw_buf, sizeof(draw_buf));
+  lv_display_set_buffers(disp, draw_buf, NULL, sizeof(draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
+  lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_0);
+  tft.setRotation(1);
+  //tft.invertDisplay(1);// this changes the color assignment
+    
+  // Initialize an LVGL input device object (Touchscreen)
+  lv_indev_t * indev = lv_indev_create();
+  lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+  // Set the callback function to read Touchscreen input
+  lv_indev_set_read_cb(indev, touchscreen_read);
+
+  // Function to draw the GUI 
+  #if 0
+  /* Create a simple label. */
+  lv_obj_t *label = lv_label_create( lv_scr_act() );
+  lv_label_set_text( label, "Hello Arduino, I'm LVGL!" );
+  lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
+  #endif
+
+  ui_init();
+}
+
+
+
+void loop() 
+{
+  lv_task_handler();  // let the GUI do its work
+  ui_tick();
+  
+ if (g_eez_event_is_available == true)
+  {
+    
+    Serial.printf("Received event: %d, Target: %d\n", action_code, action_target);
+    g_eez_event_is_available = false;
+  }  
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
