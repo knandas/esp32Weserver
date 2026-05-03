@@ -269,7 +269,7 @@ const char* password = "elec1234";
 // Your Domain name with URL path or IP address with path
 String openWeatherMapApiKey = "REPLACE_WITH_YOUR_OPEN_WEATHER_MAP_API_KEY";
 // Example:
-//String openWeatherMapApiKey = "11d3988c265263deffff50b";
+//String openWeatherMapApiKey = "11d3988c265263deffff50b"; 11d3988c265263ded10547f7dffff50b
 
 // Replace with your country code and city
 String city = "bangkok";
