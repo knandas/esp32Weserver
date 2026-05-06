@@ -447,3 +447,322 @@ void loop() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp-now-esp32-arduino-ide/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+*/
+
+#include <esp_now.h>
+#include <WiFi.h>
+#include <myBounce.h>
+
+#define sw1 34
+#define sw2 35
+#define sw3 32
+#define sw4 33
+#define relay1 4
+#define relay2 2
+#define relay3 13
+#define relay4 12
+myBounce SW1(sw1);
+myBounce SW2(sw2);
+myBounce SW3(sw3);
+myBounce SW4(sw4);
+
+bool sw1State=0,sw2State=0,sw3State=0,sw4State=0;
+bool send=0;
+uint8_t broadcastAddress[] = {0x0C, 0xB8, 0x15, 0xD7, 0x7D, 0x58};
+//uint8_t broadcastAddress[] = {0xC4, 0xDE, 0xE2, 0x13, 0x91, 0xF4};
+
+byte myNumber = 4;
+byte otherNumber = 3;
+
+// Structure example to receive data
+// Must match the sender structure
+typedef struct struct_message {
+  byte a;
+  byte b;
+  byte c;
+  byte d;
+  byte e;
+} struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+struct_message myData2;
+
+esp_now_peer_info_t peerInfo;
+
+// callback when data is sent
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+
+
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  if(myData.a==myNumber)
+  {
+    Serial.print("Bytes received: ");
+    Serial.println(len);
+    Serial.print("Char: ");
+    Serial.println(myData.a);
+    Serial.print("sw1: ");
+    Serial.println(myData.b);
+    Serial.print("sw2: ");
+    Serial.println(myData.c);
+    Serial.print("sw3: ");
+    Serial.println(myData.d);
+    Serial.print("sw4: ");
+    Serial.println(myData.e);
+    Serial.println();
+    if(myData.b==1){sw1State=!sw1State;}
+    if(myData.c==1){sw2State=!sw2State;}
+    if(myData.d==1){sw3State=!sw3State;}
+    if(myData.e==1){sw4State=!sw4State;}
+    digitalWrite(relay1,sw1State);
+    digitalWrite(relay2,sw2State);
+    digitalWrite(relay3,sw3State);
+    digitalWrite(relay4,sw4State);
+  }
+}
+ 
+void setup() {
+  // Initialize Serial Monitor
+  Serial.begin(115200);
+  
+  pinMode(sw1,INPUT_PULLUP);
+  pinMode(sw2,INPUT_PULLUP);
+  pinMode(sw3,INPUT_PULLUP);
+  pinMode(sw4,INPUT_PULLUP);
+  pinMode(relay1,OUTPUT);
+  pinMode(relay2,OUTPUT);
+  pinMode(relay3,OUTPUT);
+  pinMode(relay4,OUTPUT);
+  
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  
+  esp_now_register_send_cb(OnDataSent);
+
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(OnDataRecv);
+}
+ 
+void loop() 
+{
+  // Set values to send
+  //strcpy(myData.a, "aim com3");
+  myData2.a = otherNumber;
+  myData2.b = 0;
+  myData2.c = 0;
+  myData2.d = 0;
+  myData2.e = 0;
+
+  if(SW1.update()==1){ myData2.b=1; send=1; }
+  if(SW2.update()==1){ myData2.c=1; send=1; }
+  if(SW3.update()==1){ myData2.d=1; send=1; }
+  if(SW4.update()==1){ myData2.e=1; send=1; }
+  // Set values to send
+
+  if(send==1)
+  {
+    send=0;
+    // Send message via ESP-NOW
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData2, sizeof(myData2));
+    
+    if (result == ESP_OK) 
+    {
+      Serial.println("Sent with success");
+    }
+    else 
+    {
+      Serial.println("Error sending the data");
+    }
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   esp-now two-way communication  ////////////////////////////////////////////////////////
+/*
+ knandas  esp-now two-way communication
+*/
+
+#include <esp_now.h>
+#include <WiFi.h>
+#include <myBounce.h>
+
+#define sw1 34
+#define sw2 35
+#define sw3 32
+#define sw4 33
+#define relay1 4
+#define relay2 2
+#define relay3 13
+#define relay4 12
+myBounce SW1(sw1);
+myBounce SW2(sw2);
+myBounce SW3(sw3);
+myBounce SW4(sw4);
+
+bool sw1State=0,sw2State=0,sw3State=0,sw4State=0;
+bool send=0;
+uint8_t broadcastAddress[] = {0x0C, 0xB8, 0x15, 0xD7, 0x7D, 0x58};
+//uint8_t broadcastAddress[] = {0xC4, 0xDE, 0xE2, 0x13, 0x91, 0xF4};
+
+byte myNumber = 4;
+byte otherNumber = 3;
+
+// Structure example to receive data
+// Must match the sender structure
+typedef struct struct_message {
+  byte a;
+  byte b;
+  byte c;
+  byte d;
+  byte e;
+} struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+struct_message myData2;
+
+esp_now_peer_info_t peerInfo;
+
+// callback when data is sent
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+
+
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  if(myData.a==myNumber)
+  {
+    Serial.print("Bytes received: ");
+    Serial.println(len);
+    Serial.print("Char: ");
+    Serial.println(myData.a);
+    Serial.print("sw1: ");
+    Serial.println(myData.b);
+    Serial.print("sw2: ");
+    Serial.println(myData.c);
+    Serial.print("sw3: ");
+    Serial.println(myData.d);
+    Serial.print("sw4: ");
+    Serial.println(myData.e);
+    Serial.println();
+    if(myData.b==1){sw1State=!sw1State;}
+    if(myData.c==1){sw2State=!sw2State;}
+    if(myData.d==1){sw3State=!sw3State;}
+    if(myData.e==1){sw4State=!sw4State;}
+    digitalWrite(relay1,sw1State);
+    digitalWrite(relay2,sw2State);
+    digitalWrite(relay3,sw3State);
+    digitalWrite(relay4,sw4State);
+  }
+}
+ 
+void setup() {
+  // Initialize Serial Monitor
+  Serial.begin(115200);
+  
+  pinMode(sw1,INPUT_PULLUP);
+  pinMode(sw2,INPUT_PULLUP);
+  pinMode(sw3,INPUT_PULLUP);
+  pinMode(sw4,INPUT_PULLUP);
+  pinMode(relay1,OUTPUT);
+  pinMode(relay2,OUTPUT);
+  pinMode(relay3,OUTPUT);
+  pinMode(relay4,OUTPUT);
+  
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  
+  esp_now_register_send_cb(OnDataSent);
+
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(OnDataRecv);
+}
+ 
+void loop() 
+{
+  // Set values to send
+  //strcpy(myData.a, "aim com3");
+  myData2.a = otherNumber;
+  myData2.b = 0;
+  myData2.c = 0;
+  myData2.d = 0;
+  myData2.e = 0;
+
+  if(SW1.update()==1){ myData2.b=1; send=1; }
+  if(SW2.update()==1){ myData2.c=1; send=1; }
+  if(SW3.update()==1){ myData2.d=1; send=1; }
+  if(SW4.update()==1){ myData2.e=1; send=1; }
+  // Set values to send
+
+  if(send==1)
+  {
+    send=0;
+    // Send message via ESP-NOW
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData2, sizeof(myData2));
+    
+    if (result == ESP_OK) 
+    {
+      Serial.println("Sent with success");
+    }
+    else 
+    {
+      Serial.println("Error sending the data");
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
