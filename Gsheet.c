@@ -53,7 +53,7 @@ void loop()
 {
   sensorValue = analogRead(analogInPin);
   //percent = map(sensorValue, 0, 4096, 0, 100);
-  voltage=sensorValue*3.3/4096;
+  voltage=sensorValue*3.3/4096;    //analogReadMilliVolts(pin); 
   //Serial.print("min:");
   //Serial.print(0);
   //Serial.print(",max:");
