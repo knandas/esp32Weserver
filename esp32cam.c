@@ -887,12 +887,12 @@ inline unsigned char b64_lookup(char c) {
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "wifi1971_2";
-const char* password = "fedcba9876";
+const char* ssid = "ELEC302";
+const char* password = "elec1234";
 
 
 const char* myDomain = "script.google.com";
-String myScript = "/macros/s/AKfycbxYYd3auApzzKBXHTLg-dGCI2tsmAQAMrRcCgkRqebWf46I8buQaIUn9ZjzuRHgswq3/exec";    //Replace with your own url
+String myScript = "/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec";    //Replace with your own url
 String myFilename = "filename=ESP32-CAM.jpg";
 String mimeType = "&mimetype=image/jpeg";
 String myImage = "&data=";
