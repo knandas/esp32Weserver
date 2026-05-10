@@ -211,7 +211,8 @@ void loop()
     int percent= sensorValue *(100/4096.0);
     float volt= sensorValue *(3.3/4096.0);
     RemoteXY.onlineGraph_01_var1=volt;
-    dtostrf(volt, 1, 2, RemoteXY.text_01);
+    //dtostrf(volt, 1, 2, RemoteXY.text_01);
+    RemoteXY.value_01=volt;
     RemoteXY.led_01=state1;
     lastTime=millis();
   }
