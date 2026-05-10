@@ -81,9 +81,11 @@ void loop()
    float sensorValue = analogRead(analogInPin);
    int percent= sensorValue *(100/4096.0);
    float volt= sensorValue *(3.3/4096.0);
-   RemoteXY.level_01=percent;
+   RemoteXY.linearbar_01=percent;
    //snprintf (RemoteXY.text_01, 5, "%f.2", volt);
-   dtostrf(volt, 1, 2, RemoteXY.text_01);
+   //dtostrf(volt, 1, 2, RemoteXY.text_01);
+
+   RemoteXY.value_01=volt;
    lastTime=millis();
   } 
 }
