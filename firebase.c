@@ -1,7 +1,19 @@
-*********
+////////////////////////////////// platformio.ini /////////////////////////////////////////////////////
+
+[env:esp32doit-devkit-v1]
+platform = https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip
+board = esp32doit-devkit-v1
+framework = arduino
+lib_deps = mobizt/FirebaseClient@^2.2.9
+monitor_speed = 115200
+
+///////////////////////////////////////////////////////////////////////////////////
+/*********
   Rui Santos & Sara Santos - Random Nerd Tutorials
   Complete instructions at https://RandomNerdTutorials.com/esp32-firebase-realtime-database/
 *********/
+#define ENABLE_USER_AUTH
+#define ENABLE_DATABASE
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -53,7 +65,7 @@ void setup(){
   
   // Configure SSL client
   ssl_client.setInsecure();
-  //ssl_client.setConnectionTimeout(1000);
+  ssl_client.setConnectionTimeout(1000);
   ssl_client.setHandshakeTimeout(5);
   
   // Initialize Firebase
@@ -103,7 +115,6 @@ void processData(AsyncResult &aResult) {
   if (aResult.available())
     Firebase.printf("task: %s, payload: %s\n", aResult.uid().c_str(), aResult.c_str());
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// firebase Read Async ////////////////////////////////////////////////////////////////////////////////////////////////
