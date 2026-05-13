@@ -313,7 +313,7 @@ void setup(){
 
   // Configure SSL client
   ssl_client.setInsecure();
-  //ssl_client.setConnectionTimeout(1000);
+  ssl_client.setConnectionTimeout(1000);
   ssl_client.setHandshakeTimeout(5);
 
   // Initialize Firebase
@@ -322,18 +322,15 @@ void setup(){
   Database.url(DATABASE_URL);
 }
 
-void loop()
-{
+void loop(){
   // Maintain authentication and async tasks
   app.loop();
 
   // Check if authentication is ready
-  if (app.ready())
-  {
+  if (app.ready()){
     // Periodic data sending every 10 seconds
     unsigned long currentTime = millis();
-    if (currentTime - lastSendTime >= sendInterval)
-    {
+    if (currentTime - lastSendTime >= sendInterval){
       // Update the last send time
       lastSendTime = currentTime;
 
